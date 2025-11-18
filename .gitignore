@@ -1,0 +1,98 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Next.js
+.next/
+out/
+build/
+dist/
+.vercel
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+package-lock.json
+yarn.lock
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.hypothesis/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Uploads & Data
+uploads/
+kb_data/
+*.pdf
+*.pptx
+*.docx
+!backend/app/tests/fixtures/*.pdf
+
+# Redis
+dump.rdb
+*.rdb
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+celerybeat.db
+
+# Alembic
+alembic/versions/*.pyc
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Reflex build artifacts (if any remain)
+.states/
+.web/
+.reflex/
