@@ -16,11 +16,17 @@ interface Message {
   created_at: string
 }
 
+interface ChatSession {
+  id: string
+  created_at: string
+  updated_at: string
+}
+
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [sessionId, setSessionId] = useState<number | null>(null)
+  const [sessionId, setSessionId] = useState<string | null>(null)
   const [isListening, setIsListening] = useState(false)
   const [isVoiceSupported, setIsVoiceSupported] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -30,7 +36,7 @@ export default function ChatPage() {
   useEffect(() => {
     const initSession = async () => {
       try {
-        const session = await apiPost('/api/v1/chat/sessions', {})
+        const session = await apiPost<ChatSession>('/api/v1/chat/sessions', {})
         setSessionId(session.id)
         
         const token = localStorage.getItem('token')

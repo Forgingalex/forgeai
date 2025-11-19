@@ -65,7 +65,7 @@ forgeai/
 - Node.js 18+
 - PostgreSQL 12+
 - Redis (optional, for caching and background tasks)
-- **Ollama** (see [docs/OLLAMA_SETUP.md](docs/OLLAMA_SETUP.md))
+- **Ollama** - Download from https://ollama.ai/download
 
 ### 1. Install Ollama
 
@@ -171,10 +171,7 @@ pip install -r requirements.txt
 
 ## 📚 Documentation
 
-- **[Setup Guide](docs/SETUP.md)** - Detailed setup instructions
-- **[Quick Start](docs/QUICKSTART.md)** - Get running in 5 minutes
-- **[Ollama Setup](docs/OLLAMA_SETUP.md)** - Configure Ollama for free AI
-- **[Deployment](docs/DEPLOYMENT.md)** - Production deployment guide
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment guide
 
 ## 🎯 Why Ollama?
 
