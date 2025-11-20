@@ -38,23 +38,39 @@ export async function apiGet<T>(endpoint: string): Promise<T> {
 
 export async function apiUpload<T>(
   endpoint: string,
-  formData: FormData
+  formData: FormData,
+  timeout: number = 300000 // 5 minutes default timeout
 ): Promise<T> {
   const token = localStorage.getItem('token')
   
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    method: 'POST',
-    headers: {
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-    body: formData,
-  })
+  // Create AbortController for timeout
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeout)
+  
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+      signal: controller.signal,
+    })
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'An error occurred' }))
-    throw new Error(error.detail || 'Upload failed')
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'An error occurred' }))
+      throw new Error(error.detail || 'Upload failed')
+    }
+
+    return response.json()
+  } catch (error: any) {
+    clearTimeout(timeoutId)
+    if (error.name === 'AbortError') {
+      throw new Error('Upload timed out. The file may be too large or processing is taking too long.')
+    }
+    throw error
   }
-
-  return response.json()
 }
 

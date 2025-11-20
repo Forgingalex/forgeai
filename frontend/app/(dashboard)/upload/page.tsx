@@ -22,17 +22,30 @@ export default function UploadPage() {
     if (!file) return
 
     setIsUploading(true)
+    setSummary('') // Clear previous summary
+    
     try {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('process_now', 'true')
       formData.append('simple_summary', 'false')
 
-      const result = await apiUpload('/api/v1/files/upload', formData)
-      setSummary(result.summary || '')
+      // Use 5 minute timeout for large PDFs
+      const result = await apiUpload('/api/v1/files/upload', formData, 300000)
+      
+      if (result.summary) {
+        setSummary(result.summary)
+      } else if (result.is_processed === false && result.summary) {
+        // Error message from processing
+        setSummary(result.summary)
+      } else {
+        setSummary('File uploaded successfully, but no summary was generated.')
+      }
+      
       setIsUploading(false)
     } catch (error: any) {
-      alert(error.message)
+      console.error('Upload error:', error)
+      alert(error.message || 'Upload failed. Please try again.')
       setIsUploading(false)
     }
   }
@@ -82,13 +95,18 @@ export default function UploadPage() {
               disabled={!file || isUploading}
               className="w-full"
             >
-              {isUploading ? 'Uploading...' : 'Upload & Process'}
+              {isUploading ? 'Uploading & Processing...' : 'Upload & Process'}
             </Button>
           </Card>
 
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Summary</h2>
-            {summary ? (
+            {isUploading ? (
+              <div className="text-center py-12 text-gray-400">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p>Processing PDF... This may take a few minutes.</p>
+              </div>
+            ) : summary ? (
               <div className="prose dark:prose-invert max-w-none">
                 <p className="whitespace-pre-wrap text-sm">{summary}</p>
               </div>

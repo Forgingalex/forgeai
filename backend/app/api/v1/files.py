@@ -31,13 +31,18 @@ class FileResponse(BaseModel):
 async def upload_file(
     file: UploadFile = File(...),
     workspace_id: Optional[int] = Form(None),
-    process_now: bool = Form(False),
-    index_now: bool = Form(False),
-    simple_summary: bool = Form(False),
+    process_now: str = Form("false"),
+    index_now: str = Form("false"),
+    simple_summary: str = Form("false"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Upload a file."""
+    # Convert string booleans to actual booleans
+    process_now_bool = process_now.lower() in ("true", "1", "yes")
+    index_now_bool = index_now.lower() in ("true", "1", "yes")
+    simple_summary_bool = simple_summary.lower() in ("true", "1", "yes")
+    
     # Read file content
     file_content = await file.read()
     
@@ -59,26 +64,39 @@ async def upload_file(
         workspace_id=workspace_id,
     )
     
-    # Process if requested
-    if process_now and file_metadata["file_type"] == "pdf":
-        processed = await process_pdf(file_content, simple=simple_summary)
-        db_file.summary = processed.get("summary")
-        db_file.extracted_text = processed.get("extracted_text")
-        db_file.is_processed = True
-    
     db.add(db_file)
     db.commit()
     db.refresh(db_file)
     
-    # Index if requested
-    if index_now and file_metadata["file_type"] == "pdf":
-        chunk_count = await index_file(
-            file_content,
-            db_file.original_filename,
-            current_user.id
-        )
-        db_file.is_indexed = True
-        db.commit()
+    # Process if requested (after saving to DB so we can return file ID quickly)
+    if process_now_bool and file_metadata["file_type"] == "pdf":
+        try:
+            processed = await process_pdf(file_content, simple=simple_summary_bool)
+            db_file.summary = processed.get("summary")
+            db_file.extracted_text = processed.get("extracted_text")
+            db_file.is_processed = True
+            db.commit()
+            db.refresh(db_file)
+        except Exception as e:
+            # Log error but don't fail the upload
+            print(f"Error processing PDF: {e}")
+            db_file.is_processed = False
+            db_file.summary = f"Error processing PDF: {str(e)}"
+            db.commit()
+            db.refresh(db_file)
+    
+    # Index if requested (can be done separately)
+    if index_now_bool and file_metadata["file_type"] == "pdf":
+        try:
+            chunk_count = await index_file(
+                file_content,
+                db_file.original_filename,
+                current_user.id
+            )
+            db_file.is_indexed = True
+            db.commit()
+        except Exception as e:
+            print(f"Error indexing PDF: {e}")
     
     return db_file
 
