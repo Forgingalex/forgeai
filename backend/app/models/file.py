@@ -1,5 +1,5 @@
 """File model."""
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, BigInteger
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, BigInteger, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -25,7 +25,7 @@ class File(Base):
     extracted_text = Column(Text, nullable=True)
     
     # Metadata
-    metadata = Column(Text, nullable=True)  # JSON string
+    file_metadata = Column(Text, nullable=True)  # JSON string (renamed from 'metadata' - reserved keyword)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

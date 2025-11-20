@@ -72,7 +72,7 @@ def upgrade() -> None:
         sa.Column('role', sa.String(length=20), nullable=False),
         sa.Column('content', sa.Text(), nullable=False),
         sa.Column('sources', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-        sa.Column('metadata', postgresql.JSON(astext_type=sa.Text()), nullable=True),
+        sa.Column('message_metadata', postgresql.JSON(astext_type=sa.Text()), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
         sa.ForeignKeyConstraint(['session_id'], ['chat_sessions.id'], ),
         sa.PrimaryKeyConstraint('id')
@@ -94,7 +94,7 @@ def upgrade() -> None:
         sa.Column('is_indexed', sa.Boolean(), nullable=True),
         sa.Column('summary', sa.Text(), nullable=True),
         sa.Column('extracted_text', sa.Text(), nullable=True),
-        sa.Column('metadata', sa.Text(), nullable=True),
+        sa.Column('file_metadata', sa.Text(), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ),

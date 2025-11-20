@@ -31,7 +31,7 @@ class ChatMessage(Base):
     role = Column(String(20), nullable=False)  # 'user' or 'assistant'
     content = Column(Text, nullable=False)
     sources = Column(JSON, nullable=True)  # RAG sources
-    metadata = Column(JSON, nullable=True)  # Additional metadata
+    message_metadata = Column(JSON, nullable=True)  # Additional metadata (renamed from 'metadata' - reserved keyword)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships
