@@ -3,6 +3,7 @@ import aiofiles
 import hashlib
 from pathlib import Path
 from typing import Optional
+from concurrent.futures import ThreadPoolExecutor
 from app.core.config import settings
 from app.services.ai_service import extract_text_from_pdf_bytes, summarize_pdf, index_pdf_bytes_to_kb
 
@@ -36,15 +37,43 @@ async def save_uploaded_file(file_content: bytes, filename: str, user_id: int) -
 
 
 async def process_pdf(file_content: bytes, simple: bool = False) -> dict:
-    """Process PDF file - uses existing summarize_pdf function."""
-    summary = summarize_pdf(file_content, simple=simple)
-    extracted_text = extract_text_from_pdf_bytes(file_content)
+    """Process PDF file - runs sync summarize_pdf in thread pool to avoid blocking."""
+    loop = None
+    try:
+        import asyncio
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        pass
     
-    return {
-        "summary": summary,
-        "extracted_text": extracted_text,
-        "is_processed": True,
-    }
+    # Run sync function in thread pool to avoid blocking
+    executor = ThreadPoolExecutor(max_workers=1)
+    try:
+        if loop:
+            summary = await loop.run_in_executor(
+                executor, 
+                summarize_pdf, 
+                file_content, 
+                simple
+            )
+        else:
+            # Fallback if no event loop
+            summary = summarize_pdf(file_content, simple=simple)
+        
+        extracted_text = extract_text_from_pdf_bytes(file_content)
+        
+        return {
+            "summary": summary,
+            "extracted_text": extracted_text,
+            "is_processed": True,
+        }
+    except Exception as e:
+        return {
+            "summary": f"Error processing PDF: {str(e)}",
+            "extracted_text": "",
+            "is_processed": False,
+        }
+    finally:
+        executor.shutdown(wait=False)
 
 
 async def index_file(file_content: bytes, source_name: str, user_id: int) -> int:

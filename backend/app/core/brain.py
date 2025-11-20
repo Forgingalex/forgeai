@@ -15,18 +15,25 @@ from app.core.kb import add_texts_to_index, query_kb, clear_kb
 
 def ask_brain(prompt: str) -> str:
     """Single-shot chat completion via Ollama."""
-    with httpx.Client(timeout=60.0) as client:
-        response = client.post(
-            f"{settings.OLLAMA_BASE_URL}/api/generate",
-            json={
-                "model": settings.OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": False,
-            }
-        )
-        response.raise_for_status()
-        result = response.json()
-        return result.get("response", "")
+    try:
+        with httpx.Client(timeout=120.0) as client:  # Increased timeout for large PDFs
+            response = client.post(
+                f"{settings.OLLAMA_BASE_URL}/api/generate",
+                json={
+                    "model": settings.OLLAMA_MODEL,
+                    "prompt": prompt,
+                    "stream": False,
+                }
+            )
+            response.raise_for_status()
+            result = response.json()
+            return result.get("response", "")
+    except httpx.TimeoutException:
+        return "AI request timed out. The PDF may be too large. Please try a smaller file."
+    except httpx.ConnectError:
+        return "Cannot connect to Ollama. Please make sure Ollama is running."
+    except Exception as e:
+        return f"AI service error: {str(e)}"
 
 
 #  TEXT CHUNKING
@@ -109,8 +116,8 @@ def summarize_pdf(pdf_bytes: bytes, simple: bool = False) -> str:
         fp = io.BytesIO(pdf_bytes)
         reader = PdfReader(fp)
         
-        # Limit pages for summarization
-        MAX_PAGES_FOR_SUMMARY = 50  # Process max 50 pages for summary
+        # Limit pages for summarization (reduced for faster processing)
+        MAX_PAGES_FOR_SUMMARY = 15  # Process max 15 pages for faster summary
         total_pages = len(reader.pages)
         pages_to_process = min(total_pages, MAX_PAGES_FOR_SUMMARY)
         
@@ -128,8 +135,8 @@ def summarize_pdf(pdf_bytes: bytes, simple: bool = False) -> str:
                 if not page_text.strip():
                     continue
                 
-                # Limit page text size
-                MAX_PAGE_TEXT = 5000  # Max 5000 chars per page
+                # Limit page text size (reduced for faster processing)
+                MAX_PAGE_TEXT = 2000  # Max 2000 chars per page for faster AI calls
                 if len(page_text) > MAX_PAGE_TEXT:
                     page_text = page_text[:MAX_PAGE_TEXT] + "..."
                 
@@ -153,10 +160,14 @@ def summarize_pdf(pdf_bytes: bytes, simple: bool = False) -> str:
         if not page_summaries:
             return "Could not extract meaningful text from this PDF."
         
+        # Limit number of summaries to avoid too many AI calls
+        if len(page_summaries) > 10:
+            page_summaries = page_summaries[:10]
+        
         combined = "\n".join(page_summaries)
         
         # Limit combined summary size
-        MAX_COMBINED = 10000  # Max 10k chars
+        MAX_COMBINED = 5000  # Reduced to 5k chars for faster final synthesis
         if len(combined) > MAX_COMBINED:
             combined = combined[:MAX_COMBINED] + "\n\n[Summary truncated...]"
         
