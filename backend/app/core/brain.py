@@ -1,6 +1,23 @@
-"""AI brain functions - PDF processing, summarization, and RAG."""
+"""
+AI brain functions - PDF processing, summarization, and RAG.
+
+This module handles all AI-related operations including:
+- Text chunking and processing
+- PDF extraction and summarization
+- RAG (Retrieval-Augmented Generation) queries
+- Knowledge base management
+
+Architecture Decision: Why TF-IDF over embeddings?
+- Simpler implementation, no external vector database needed
+- Good enough for small-medium knowledge bases (<10k documents)
+- Lower computational overhead
+- Easier to debug and understand
+- Can be upgraded to embeddings (e.g., OpenAI, Cohere) later if needed
+"""
 import httpx
+import logging
 from app.core.config import settings
+from app.core.logging_config import get_logger
 
 import io
 import time
@@ -10,12 +27,30 @@ from pypdf import PdfReader
 # Knowledge Base helpers
 from app.core.kb import add_texts_to_index, query_kb, clear_kb
 
+logger = get_logger(__name__)
+
 
 #  AI CLIENT - Ollama (Free, Local, Unlimited)
 
 def ask_brain(prompt: str) -> str:
-    """Single-shot chat completion via Ollama."""
+    """
+    Single-shot chat completion via Ollama.
+    
+    Args:
+        prompt: The prompt to send to the AI model
+    
+    Returns:
+        AI-generated response text
+    
+    Raises:
+        Exception: If AI service is unavailable or returns an error
+    
+    Note:
+        Uses Ollama for local, free, unlimited AI processing.
+        Timeout is set to 120 seconds for large PDF processing.
+    """
     try:
+        logger.debug(f"Sending prompt to Ollama (length: {len(prompt)} chars)")
         with httpx.Client(timeout=120.0) as client:  # Increased timeout for large PDFs
             response = client.post(
                 f"{settings.OLLAMA_BASE_URL}/api/generate",
@@ -27,25 +62,46 @@ def ask_brain(prompt: str) -> str:
             )
             response.raise_for_status()
             result = response.json()
-            return result.get("response", "")
+            response_text = result.get("response", "")
+            logger.debug(f"Received response from Ollama (length: {len(response_text)} chars)")
+            return response_text
     except httpx.TimeoutException:
+        logger.error("Ollama request timed out")
         return "AI request timed out. The PDF may be too large. Please try a smaller file."
     except httpx.ConnectError:
+        logger.error("Cannot connect to Ollama service")
         return "Cannot connect to Ollama. Please make sure Ollama is running."
     except Exception as e:
+        logger.error(f"AI service error: {e}", exc_info=True)
         return f"AI service error: {str(e)}"
 
 
 #  TEXT CHUNKING
 
 def split_text_to_chunks(text: str, chunk_size: int = 800, overlap: int = 100) -> List[str]:
-    """Split text into overlapping chunks for processing."""
+    """
+    Split text into overlapping chunks for processing.
+    
+    Args:
+        text: Text to chunk
+        chunk_size: Maximum size of each chunk in characters
+        overlap: Number of characters to overlap between chunks
+    
+    Returns:
+        List of text chunks
+    
+    Note:
+        Overlapping chunks help maintain context across boundaries.
+        Text is limited to 10MB to prevent memory issues.
+    """
     if not text or len(text) == 0:
         return []
     
     # Limit text size to prevent memory issues (10MB max)
     MAX_TEXT_SIZE = 10 * 1024 * 1024  # 10MB
+    original_length = len(text)
     if len(text) > MAX_TEXT_SIZE:
+        logger.warning(f"Text truncated from {original_length} to {MAX_TEXT_SIZE} bytes")
         text = text[:MAX_TEXT_SIZE]
     
     if len(text) <= chunk_size:
@@ -64,6 +120,7 @@ def split_text_to_chunks(text: str, chunk_size: int = 800, overlap: int = 100) -
         if start >= L:
             break
 
+    logger.debug(f"Split text into {len(chunks)} chunks (size: {chunk_size}, overlap: {overlap})")
     return chunks
 
 

@@ -1,11 +1,33 @@
-"""Knowledge Base - TF-IDF based RAG system."""
+"""
+Knowledge Base - TF-IDF based RAG system.
+
+This module implements a Retrieval-Augmented Generation (RAG) system using
+TF-IDF vectorization for semantic search.
+
+Why TF-IDF over embeddings?
+- Simpler implementation, no external vector database needed
+- Good enough for small-medium knowledge bases (<10k documents)
+- Lower computational overhead
+- Easier to debug and understand
+- Can be upgraded to embeddings later if needed
+
+Architecture:
+- Stores text chunks with metadata
+- Uses TF-IDF vectorization for search
+- Returns top-k most similar chunks
+- Can be upgraded to embeddings + vector DB for better performance
+"""
 import os
 import json
+import logging
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from typing import List, Tuple
 from pathlib import Path
+from app.core.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 # KB directory relative to backend root
 BACKEND_ROOT = Path(__file__).parent.parent.parent

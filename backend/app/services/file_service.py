@@ -1,15 +1,40 @@
-"""File processing service."""
+"""
+File processing service.
+
+Handles file upload, storage, and processing operations.
+"""
 import aiofiles
 import hashlib
+import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any
 from concurrent.futures import ThreadPoolExecutor
 from app.core.config import settings
+from app.core.logging_config import get_logger
 from app.services.ai_service import extract_text_from_pdf_bytes, summarize_pdf, index_pdf_bytes_to_kb
 
+logger = get_logger(__name__)
 
-async def save_uploaded_file(file_content: bytes, filename: str, user_id: int) -> dict:
-    """Save uploaded file and return metadata."""
+
+async def save_uploaded_file(file_content: bytes, filename: str, user_id: int) -> Dict[str, Any]:
+    """
+    Save uploaded file to disk and return metadata.
+    
+    Args:
+        file_content: File content as bytes
+        filename: Original filename
+        user_id: User ID for directory organization
+    
+    Returns:
+        Dictionary with file metadata:
+        - filename: Unique stored filename
+        - original_filename: Original filename
+        - file_path: Full path to saved file
+        - file_type: File extension (lowercase)
+        - file_size: File size in bytes
+    """
+    logger.debug(f"Saving file {filename} for user {user_id}")
+    
     # Create user-specific directory
     user_dir = settings.UPLOAD_DIR / str(user_id)
     user_dir.mkdir(parents=True, exist_ok=True)
@@ -27,6 +52,8 @@ async def save_uploaded_file(file_content: bytes, filename: str, user_id: int) -
     # Determine file type
     file_type = file_ext.lstrip('.').lower()
     
+    logger.info(f"File saved: {file_path} ({len(file_content)} bytes)")
+    
     return {
         "filename": unique_filename,
         "original_filename": filename,
@@ -36,8 +63,26 @@ async def save_uploaded_file(file_content: bytes, filename: str, user_id: int) -
     }
 
 
-async def process_pdf(file_content: bytes, simple: bool = False) -> dict:
-    """Process PDF file - runs sync summarize_pdf in thread pool to avoid blocking."""
+async def process_pdf(file_content: bytes, simple: bool = False) -> Dict[str, Any]:
+    """
+    Process PDF file - extract text and generate summary.
+    
+    Args:
+        file_content: PDF file content as bytes
+        simple: Whether to generate simple summary
+    
+    Returns:
+        Dictionary with processing results:
+        - summary: Generated summary text
+        - extracted_text: Extracted text from PDF
+        - is_processed: Whether processing succeeded
+    
+    Note:
+        Runs sync summarize_pdf in thread pool to avoid blocking event loop.
+        This allows async endpoints to handle PDF processing without blocking.
+    """
+    logger.debug(f"Processing PDF (simple={simple}, size={len(file_content)} bytes)")
+    
     loop = None
     try:
         import asyncio
@@ -61,12 +106,15 @@ async def process_pdf(file_content: bytes, simple: bool = False) -> dict:
         
         extracted_text = extract_text_from_pdf_bytes(file_content)
         
+        logger.info(f"PDF processed successfully (summary length: {len(summary)} chars)")
+        
         return {
             "summary": summary,
             "extracted_text": extracted_text,
             "is_processed": True,
         }
     except Exception as e:
+        logger.error(f"Error processing PDF: {e}", exc_info=True)
         return {
             "summary": f"Error processing PDF: {str(e)}",
             "extracted_text": "",
@@ -77,7 +125,23 @@ async def process_pdf(file_content: bytes, simple: bool = False) -> dict:
 
 
 async def index_file(file_content: bytes, source_name: str, user_id: int) -> int:
-    """Index file into knowledge base - uses existing function."""
+    """
+    Index file into knowledge base for RAG queries.
+    
+    Args:
+        file_content: File content as bytes
+        source_name: Source identifier for the file
+        user_id: User ID (for logging)
+    
+    Returns:
+        Number of chunks indexed
+    
+    Note:
+        Currently only supports PDF files.
+        Indexes text chunks for semantic search.
+    """
+    logger.info(f"Indexing file {source_name} for user {user_id}")
     chunk_count = index_pdf_bytes_to_kb(file_content, source_name=source_name)
+    logger.info(f"Indexed {chunk_count} chunks from {source_name}")
     return chunk_count
 

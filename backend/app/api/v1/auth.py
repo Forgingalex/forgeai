@@ -1,13 +1,18 @@
 """Authentication endpoints."""
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from datetime import timedelta
 from app.core.database import get_db
+from app.core.logging_config import get_logger
+from app.core.exceptions import AuthenticationError, ValidationError
 from app.core.security import verify_password, get_password_hash, create_access_token, decode_access_token
 from app.core.config import settings
 from app.models.user import User
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
@@ -40,25 +45,39 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ) -> User:
-    """Get current authenticated user."""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    """
+    Get current authenticated user from JWT token.
     
+    Args:
+        token: JWT access token from Authorization header
+        db: Database session
+    
+    Returns:
+        User object for authenticated user
+    
+    Raises:
+        AuthenticationError: If token is invalid or user not found
+    """
     payload = decode_access_token(token)
     if payload is None:
-        raise credentials_exception
+        logger.warning("Invalid token provided")
+        raise AuthenticationError("Could not validate credentials")
     
     username: str = payload.get("sub")
     if username is None:
-        raise credentials_exception
+        logger.warning("Token missing 'sub' field")
+        raise AuthenticationError("Could not validate credentials")
     
     user = db.query(User).filter(User.username == username).first()
     if user is None:
-        raise credentials_exception
+        logger.warning(f"User not found: {username}")
+        raise AuthenticationError("Could not validate credentials")
     
+    if not user.is_active:
+        logger.warning(f"Inactive user attempted access: {username}")
+        raise AuthenticationError("User account is inactive")
+    
+    logger.debug(f"Authenticated user: {username}")
     return user
 
 
@@ -92,20 +111,33 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    """Login and get access token."""
+    """
+    Login and get access token.
+    
+    Args:
+        form_data: Login credentials (username, password)
+        db: Database session
+    
+    Returns:
+        JWT access token
+    
+    Raises:
+        AuthenticationError: If credentials are invalid
+    """
+    logger.info(f"Login attempt: {form_data.username}")
+    
     user = db.query(User).filter(User.username == form_data.username).first()
     
     if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        logger.warning(f"Login failed: invalid credentials for {form_data.username}")
+        raise AuthenticationError("Incorrect username or password")
     
     if not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        logger.warning(f"Login failed: inactive user {form_data.username}")
+        raise AuthenticationError("User account is inactive")
     
     access_token = create_access_token(data={"sub": user.username})
+    logger.info(f"Login successful: {form_data.username}")
     return {"access_token": access_token, "token_type": "bearer"}
 
 

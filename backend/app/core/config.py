@@ -1,4 +1,9 @@
-"""Application configuration."""
+"""
+Application configuration.
+
+Uses Pydantic Settings for environment variable management.
+Supports .env file and environment variables.
+"""
 from pydantic_settings import BaseSettings
 from typing import List
 import os
