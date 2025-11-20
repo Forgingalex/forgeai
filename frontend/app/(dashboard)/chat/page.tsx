@@ -17,16 +17,16 @@ interface Message {
 }
 
 interface ChatSession {
-  id: string
+  id: number
   created_at: string
-  updated_at: string
+  updated_at: string | null
 }
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [sessionId, setSessionId] = useState<number | null>(null)
   const [isListening, setIsListening] = useState(false)
   const [isVoiceSupported, setIsVoiceSupported] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -37,6 +37,12 @@ export default function ChatPage() {
     const initSession = async () => {
       try {
         const session = await apiPost<ChatSession>('/api/v1/chat/sessions', {})
+        
+        // Validate session ID is a number
+        if (typeof session.id !== 'number' || isNaN(session.id)) {
+          throw new Error(`Invalid session ID: ${session.id}`)
+        }
+        
         setSessionId(session.id)
         
         const token = localStorage.getItem('token')

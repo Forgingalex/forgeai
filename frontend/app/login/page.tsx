@@ -18,14 +18,6 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const router = useRouter()
 
-  // Helper function to store token in both localStorage and cookies
-  const storeToken = (token: string) => {
-    localStorage.setItem('token', token)
-    // Store in cookie for middleware (7 days expiry)
-    const maxAge = 60 * 60 * 24 * 7 // 7 days in seconds
-    document.cookie = `token=${token}; path=/; max-age=${maxAge}; SameSite=Lax`
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -46,7 +38,7 @@ export default function LoginPage() {
         }
 
         const data = await response.json()
-        storeToken(data.access_token)
+        localStorage.setItem('token', data.access_token)
         router.push('/chat')
       } else {
         await apiPost('/api/v1/auth/register', {
@@ -66,7 +58,7 @@ export default function LoginPage() {
         })
 
         const data = await response.json()
-        storeToken(data.access_token)
+        localStorage.setItem('token', data.access_token)
         router.push('/chat')
       }
     } catch (err: any) {

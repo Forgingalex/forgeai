@@ -113,11 +113,11 @@ async def websocket_chat(
         token = query_params.get("token")
         
         # Authenticate user via token (from query params or first message)
-        user_id = None
+        username = None
         if token:
             try:
                 payload = decode_access_token(token)
-                user_id = payload.get("sub")
+                username = payload.get("sub")  # Token contains username, not user_id
             except:
                 pass
         
@@ -129,10 +129,13 @@ async def websocket_chat(
             return
         
         # Verify user owns session if token provided
-        if user_id and session.user_id != int(user_id):
-            await websocket.close(code=1008, reason="Unauthorized")
-            db.close()
-            return
+        if username:
+            # Look up user by username and verify session ownership
+            user = db.query(User).filter(User.username == username).first()
+            if not user or session.user_id != user.id:
+                await websocket.close(code=1008, reason="Unauthorized")
+                db.close()
+                return
         
         while True:
             # Receive message
@@ -140,11 +143,13 @@ async def websocket_chat(
             message_data = json.loads(data)
             
             # Handle auth token in first message if not in query
-            if not user_id and "token" in message_data:
+            if not username and "token" in message_data:
                 try:
                     payload = decode_access_token(message_data["token"])
-                    user_id = payload.get("sub")
-                    if session.user_id != int(user_id):
+                    username = payload.get("sub")
+                    # Look up user by username and verify session ownership
+                    user = db.query(User).filter(User.username == username).first()
+                    if not user or session.user_id != user.id:
                         await websocket.close(code=1008, reason="Unauthorized")
                         db.close()
                         return
