@@ -203,10 +203,10 @@ async def websocket_chat(
                     response_text = f"Error in RAG: {str(e)}"
                     sources = []
             else:
-                # Regular chat
+                # Regular chat - auto mode (tries Google first, falls back to Ollama)
                 response_text = ""
                 try:
-                    async for chunk in stream_chat(ai_messages):
+                    async for chunk in stream_chat(ai_messages, provider="auto"):
                         response_text += chunk
                         await websocket.send_text(json.dumps({
                             "type": "chunk",

@@ -34,7 +34,7 @@ logger = get_logger(__name__)
 
 def ask_brain(prompt: str) -> str:
     """
-    Single-shot chat completion via Ollama.
+    Single-shot chat completion with automatic provider selection.
     
     Args:
         prompt: The prompt to send to the AI model
@@ -46,31 +46,26 @@ def ask_brain(prompt: str) -> str:
         Exception: If AI service is unavailable or returns an error
     
     Note:
-        Uses Ollama for local, free, unlimited AI processing.
+        Uses auto mode: tries Google AI Studio first (fast),
+        automatically falls back to Ollama if limits are hit or offline.
         Timeout is set to 120 seconds for large PDF processing.
     """
     try:
-        logger.debug(f"Sending prompt to Ollama (length: {len(prompt)} chars)")
-        with httpx.Client(timeout=120.0) as client:  # Increased timeout for large PDFs
-            response = client.post(
-                f"{settings.OLLAMA_BASE_URL}/api/generate",
-                json={
-                    "model": settings.OLLAMA_MODEL,
-                    "prompt": prompt,
-                    "stream": False,
-                }
-            )
-            response.raise_for_status()
-            result = response.json()
-            response_text = result.get("response", "")
-            logger.debug(f"Received response from Ollama (length: {len(response_text)} chars)")
-            return response_text
-    except httpx.TimeoutException:
-        logger.error("Ollama request timed out")
-        return "AI request timed out. The PDF may be too large. Please try a smaller file."
-    except httpx.ConnectError:
-        logger.error("Cannot connect to Ollama service")
-        return "Cannot connect to Ollama. Please make sure Ollama is running."
+        logger.debug(f"Sending prompt to AI (length: {len(prompt)} chars)")
+        
+        # Use async service with auto fallback
+        import asyncio
+        from app.services.ai_service import ask_brain as ai_ask
+        
+        # Run async function in sync context
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        return loop.run_until_complete(ai_ask(prompt, provider="auto"))
+            
     except Exception as e:
         logger.error(f"AI service error: {e}", exc_info=True)
         return f"AI service error: {str(e)}"
@@ -110,14 +105,27 @@ def split_text_to_chunks(text: str, chunk_size: int = 800, overlap: int = 100) -
     chunks = []
     start = 0
     L = len(text)
+    
+    # Ensure overlap doesn't exceed chunk_size to prevent infinite loops
+    overlap = min(overlap, chunk_size - 1)
+    
+    # Limit maximum number of chunks to prevent memory issues
+    MAX_CHUNKS = 10000  # Reasonable limit for processing
+    chunk_count = 0
 
-    while start < L:
+    while start < L and chunk_count < MAX_CHUNKS:
         end = min(start + chunk_size, L)
         chunk = text[start:end].strip()
         if chunk:  # Only add non-empty chunks
             chunks.append(chunk)
-        start = end - overlap
-        if start >= L:
+            chunk_count += 1
+        
+        # Move forward by (chunk_size - overlap) to create next chunk with overlap
+        # This ensures we always make progress
+        start += chunk_size - overlap
+        
+        # Safety check: if we're not making progress, break
+        if start >= end:
             break
 
     logger.debug(f"Split text into {len(chunks)} chunks (size: {chunk_size}, overlap: {overlap})")

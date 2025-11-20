@@ -34,10 +34,14 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
     ]
     
-    # AI APIs - Ollama (Free, Local, Unlimited)
+    # AI APIs - Ollama (Free, Local, Unlimited, Fallback)
     OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
     MODEL_NAME: str = os.getenv("MODEL_NAME", "llama3.1:8b")
+    
+    # Google AI Studio (Gemini API) - Fast, cloud-based, Primary provider
+    GOOGLE_AI_API_KEY: str = os.getenv("GOOGLE_AI_API_KEY", "")
+    GOOGLE_AI_MODEL: str = os.getenv("GOOGLE_AI_MODEL", "gemini-2.5-flash")  # Fast, latest flash model
     
     # Legacy (optional fallback - not used with Ollama)
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
