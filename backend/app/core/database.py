@@ -12,20 +12,27 @@ engine = create_engine(
     echo=settings.DEBUG,
 )
 
-# Async engine for FastAPI
-async_engine = create_async_engine(
-    settings.DATABASE_URL_ASYNC,
-    pool_pre_ping=True,
-    echo=settings.DEBUG,
-)
-
 # Session makers
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-AsyncSessionLocal = async_sessionmaker(
-    async_engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
+
+# Async engine for FastAPI (optional - only if asyncpg is installed)
+try:
+    async_engine = create_async_engine(
+        settings.DATABASE_URL_ASYNC,
+        pool_pre_ping=True,
+        echo=settings.DEBUG,
+    )
+    AsyncSessionLocal = async_sessionmaker(
+        async_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+except (ImportError, ValueError) as e:
+    # asyncpg not installed or invalid URL - async features disabled
+    async_engine = None
+    AsyncSessionLocal = None
+    if settings.DEBUG:
+        print(f"Warning: Async database engine not available: {e}")
 
 Base = declarative_base()
 
@@ -41,6 +48,8 @@ def get_db():
 
 async def get_async_db():
     """Dependency for getting async database session."""
+    if AsyncSessionLocal is None:
+        raise RuntimeError("Async database not available. Install asyncpg to enable async features.")
     async with AsyncSessionLocal() as session:
         yield session
 
