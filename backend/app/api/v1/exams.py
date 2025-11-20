@@ -106,7 +106,7 @@ async def get_exams(
     """Get user's exam sessions."""
     exams = db.query(ExamSession).filter(
         ExamSession.user_id == current_user.id
-    ).order_by(ExamSession.created_at.desc()).all()
+    ).order_by(ExamSession.started_at.desc()).all()
     return exams
 
 

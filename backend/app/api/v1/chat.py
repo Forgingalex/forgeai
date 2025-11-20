@@ -39,7 +39,7 @@ class ChatSessionResponse(BaseModel):
     id: int
     title: Optional[str]
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None  # Can be None on creation (only set on update)
     
     class Config:
         from_attributes = True
