@@ -11,6 +11,8 @@ export function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem('token')
+    // Clear cookie as well
+    document.cookie = 'token=; path=/; max-age=0; SameSite=Lax'
     window.location.href = '/login'
   }
 
