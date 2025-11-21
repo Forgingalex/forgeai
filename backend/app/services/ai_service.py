@@ -234,23 +234,86 @@ async def stream_chat(
 async def _stream_google_ai(messages: List[Dict[str, str]], model: str) -> AsyncGenerator[str, None]:
     """Internal function to stream from Google AI."""
     try:
+        import asyncio
+        from concurrent.futures import ThreadPoolExecutor
+        import queue
+        
         ai_model = genai.GenerativeModel(model)
         
-        # Convert messages format for Gemini
-        # Build conversation history
-        chat = ai_model.start_chat(history=[])
+        # Build chat history from previous messages
+        # Only process messages up to the last user message
+        history = []
+        last_user_message = None
         
-        # Process conversation history (all but last message)
-        for msg in messages[:-1]:
+        for i, msg in enumerate(messages):
             if msg["role"] == "user":
-                await chat.send_message_async(msg["content"])
-            # Note: Gemini handles assistant responses automatically in chat history
+                if i < len(messages) - 1:
+                    # This is not the last message, add to history
+                    history.append({"role": "user", "parts": [msg["content"]]})
+                else:
+                    # This is the last message, we'll stream it
+                    last_user_message = msg["content"]
+            elif msg["role"] == "assistant" and i < len(messages) - 1:
+                # Add assistant response to history
+                history.append({"role": "model", "parts": [msg["content"]]})
         
-        # Stream the last message
-        last_message = messages[-1]["content"] if messages else ""
-        async for chunk in chat.send_message_async(last_message, stream=True):
-            if chunk.text:
-                yield chunk.text
+        # Start chat with history
+        chat = ai_model.start_chat(history=history)
+        
+        # Stream the last message using synchronous API wrapped in executor
+        # Google AI SDK's async streaming has issues, so we use sync + executor
+        if last_user_message:
+            # Use queue to pass chunks from sync thread to async generator
+            chunk_queue = queue.Queue()
+            exception_holder = [None]
+            
+            def _stream_sync():
+                """Synchronous streaming wrapper that puts chunks in queue."""
+                try:
+                    response = chat.send_message(last_user_message, stream=True)
+                    for chunk in response:
+                        if chunk.text:
+                            chunk_queue.put(chunk.text)
+                    chunk_queue.put(None)  # Signal end
+                except Exception as e:
+                    exception_holder[0] = e
+                    chunk_queue.put(None)  # Signal end
+            
+            # Run sync streaming in executor
+            loop = asyncio.get_event_loop()
+            executor = ThreadPoolExecutor(max_workers=1)
+            future = loop.run_in_executor(executor, _stream_sync)
+            
+            try:
+                # Yield chunks from queue as they arrive
+                while True:
+                    # Check for exceptions
+                    if exception_holder[0]:
+                        raise exception_holder[0]
+                    
+                    # Get chunk from queue (non-blocking check)
+                    try:
+                        chunk = chunk_queue.get_nowait()
+                    except queue.Empty:
+                        # Queue empty, check if streaming is done
+                        if future.done():
+                            # Check for exceptions
+                            if exception_holder[0]:
+                                raise exception_holder[0]
+                            # No more chunks
+                            break
+                        # Wait a bit for more chunks
+                        await asyncio.sleep(0.01)
+                        continue
+                    
+                    if chunk is None:
+                        break
+                    yield chunk
+            finally:
+                executor.shutdown(wait=False)
+        else:
+            # No last message, return empty
+            return
                 
     except Exception as e:
         error_str = str(e).lower()
