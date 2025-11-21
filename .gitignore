@@ -18,12 +18,15 @@ build/
 *.sqlite
 *.sqlite3
 *.sql
+test.db
 
 # Environment
 .env
 .env.local
 .env.*.local
 .env.production
+# Keep .env.example files - they should be committed
+!.env.example
 
 # Next.js
 .next/
@@ -38,12 +41,15 @@ node_modules/
 .pnp.js
 package-lock.json
 yarn.lock
+pnpm-lock.yaml
 
 # Testing
 .coverage
 .pytest_cache/
 htmlcov/
 .tox/
+.hypothesis/
+*.cover
 .hypothesis/
 
 # IDE
@@ -92,7 +98,10 @@ alembic/versions/*.pyc
 *.temp
 .cache/
 
-# Reflex build artifacts (if any remain)
+# TypeScript
+*.tsbuildinfo
+
+# Build artifacts
 .states/
 .web/
 .reflex/
