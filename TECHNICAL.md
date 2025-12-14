@@ -4,15 +4,15 @@ Complete technical reference for installation, configuration, and deployment.
 
 ## Features
 
-- Streaming AI Chat - Real-time conversations with Ollama-powered AI
-- PDF Summarization - Extract and summarize key information from documents
-- RAG Memory System - Intelligent knowledge retrieval from your documents
-- Study Planner - Generate personalized study schedules
-- Exam Mode - AI-generated questions with automated grading
-- Flashcard Generator - Create and manage study flashcards
-- Voice Chat - Speak naturally with your AI assistant
-- Workspace Management - Organize files, notes, and projects
-- Cloud Memory - Persistent knowledge across sessions
+- Streaming AI Chat - Real-time streaming interaction with local LLM inference via WebSocket
+- PDF Summarization - Document processing and memory externalization mechanism
+- RAG Memory System - Retrieval-augmented generation with persistent knowledge base indexing
+- Study Planner - Temporal planning feedback loop with session scheduling
+- Exam Mode - Question generation and automated evaluation loop
+- Flashcard Generator - Structured recall primitives with spaced repetition
+- Voice Chat - Audio input interaction surface with speech-to-text conversion
+- Workspace Management - Document organization and namespace isolation
+- Persistent Local Knowledge Base - Persistent knowledge base that survives session boundaries
 
 ## Tech Stack
 
@@ -246,11 +246,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for more testing guidelines.
 
 ## Why Ollama?
 
-- 100% Free - No API costs
-- Unlimited Usage - No rate limits
-- Privacy - Data stays local
-- Offline - Works without internet
-- Open Source - Fully transparent
+- Local inference - Models execute on local hardware, eliminating cloud API dependencies
+- Zero external dependencies - System operates without network calls to third-party services
+- Inspectability - Model weights and inference process are accessible for analysis
+- Cost determinism - Compute costs are bounded by hardware capacity, not usage volume
+- Offline operation - System functions without network connectivity requirements
 
 ## Architecture
 

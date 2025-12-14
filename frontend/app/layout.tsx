@@ -6,8 +6,8 @@ import { Providers } from './providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'ForgeAI - Think Faster. Learn Smarter.',
-  description: 'A premium AI companion designed to forge understanding, accelerate learning, and simplify complex ideas.',
+  title: 'ForgeAI',
+  description: 'Local-first cognitive system with persistent memory and retrieval-augmented reasoning.',
 }
 
 export default function RootLayout({

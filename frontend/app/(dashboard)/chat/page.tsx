@@ -236,9 +236,9 @@ export default function ChatPage() {
           {messages.length === 0 && (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <h2 className="text-2xl font-bold mb-2">Welcome to ForgeAI</h2>
+                <h2 className="text-2xl font-bold mb-2">ForgeAI</h2>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Ask me anything. Think faster, learn smarter.
+                  Local-first cognitive system with persistent memory and retrieval-augmented reasoning.
                 </p>
               </div>
             </div>
@@ -289,7 +289,7 @@ export default function ChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Ask anything... Think faster, learn smarter."
+              placeholder="Query the system with retrieval-augmented context..."
               className="flex-1"
             />
             {isVoiceSupported && (

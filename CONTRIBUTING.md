@@ -393,5 +393,5 @@ Contributors will be recognized in:
 - Release notes
 - Project documentation
 
-Thank you for contributing to ForgeAI! 🎉
+Thank you for contributing to ForgeAI!
 

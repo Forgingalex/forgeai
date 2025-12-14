@@ -87,7 +87,7 @@ export default function LoginPage() {
             {isLogin ? 'Welcome back' : 'Create account'}
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 text-center">
-            {isLogin ? 'Sign in to continue' : 'Start your learning journey'}
+            {isLogin ? 'Sign in to continue' : 'Create account to access the system'}
           </p>
 
           {error && (
