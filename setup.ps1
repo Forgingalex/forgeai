@@ -1,5 +1,5 @@
 # ForgeAI Setup Script for Windows
-Write-Host "🚀 ForgeAI Setup Script" -ForegroundColor Cyan
+Write-Host "ForgeAI Setup Script" -ForegroundColor Cyan
 Write-Host "======================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -7,33 +7,33 @@ Write-Host ""
 Write-Host "Checking Python installation..." -ForegroundColor Yellow
 $pythonVersion = python --version 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Python not found. Please install Python 3.9+" -ForegroundColor Red
+    Write-Host "[ERROR] Python not found. Please install Python 3.9+" -ForegroundColor Red
     exit 1
 }
-Write-Host "✅ $pythonVersion" -ForegroundColor Green
+Write-Host "[OK] $pythonVersion" -ForegroundColor Green
 
 # Check Node.js
 Write-Host "Checking Node.js installation..." -ForegroundColor Yellow
 $nodeVersion = node --version 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Node.js not found. Please install Node.js 18+" -ForegroundColor Red
+    Write-Host "[ERROR] Node.js not found. Please install Node.js 18+" -ForegroundColor Red
     exit 1
 }
-Write-Host "✅ Node.js $nodeVersion" -ForegroundColor Green
+Write-Host "[OK] Node.js $nodeVersion" -ForegroundColor Green
 
 # Check Ollama
 Write-Host "Checking Ollama installation..." -ForegroundColor Yellow
 $ollamaVersion = ollama --version 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "⚠️  Ollama not found. Please install from https://ollama.ai/download" -ForegroundColor Yellow
+    Write-Host "[WARNING] Ollama not found. Please install from https://ollama.ai/download" -ForegroundColor Yellow
     Write-Host "   After installation, run: ollama pull llama3.1:8b" -ForegroundColor Yellow
 } else {
-    Write-Host "✅ Ollama installed" -ForegroundColor Green
+    Write-Host "[OK] Ollama installed" -ForegroundColor Green
 }
 
 # Setup Backend
 Write-Host ""
-Write-Host "📦 Setting up backend..." -ForegroundColor Cyan
+Write-Host "Setting up backend..." -ForegroundColor Cyan
 Set-Location backend
 
 # Create virtual environment if it doesn't exist
@@ -54,7 +54,7 @@ Set-Location ..
 
 # Setup Frontend
 Write-Host ""
-Write-Host "📦 Setting up frontend..." -ForegroundColor Cyan
+Write-Host "Setting up frontend..." -ForegroundColor Cyan
 Set-Location frontend
 
 Write-Host "Installing frontend dependencies..." -ForegroundColor Yellow
@@ -63,7 +63,7 @@ npm install
 Set-Location ..
 
 Write-Host ""
-Write-Host "✅ Setup complete!" -ForegroundColor Green
+Write-Host "[OK] Setup complete!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host "1. Install Ollama: https://ollama.ai/download" -ForegroundColor White

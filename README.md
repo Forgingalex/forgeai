@@ -1,245 +1,57 @@
 # ForgeAI
 
-> **Think Faster. Learn Smarter.**
-
-A premium AI-powered study companion designed to forge understanding, accelerate learning, and simplify complex ideas.
-
-## ✨ Features
-
-- 💬 **Streaming AI Chat** - Real-time conversations with Ollama-powered AI
-- 📄 **PDF Summarization** - Extract and summarize key information from documents
-- 🧠 **RAG Memory System** - Intelligent knowledge retrieval from your documents
-- 📝 **Study Planner** - Generate personalized study schedules
-- 🎓 **Exam Mode** - AI-generated questions with automated grading
-- 🃏 **Flashcard Generator** - Create and manage study flashcards
-- 🎤 **Voice Chat** - Speak naturally with your AI assistant
-- 📊 **Workspace Management** - Organize files, notes, and projects
-- ☁️ **Cloud Memory** - Persistent knowledge across sessions
-
-## 🚀 Tech Stack
-
-**Frontend:**
-- Next.js 14 (App Router)
-- React 18 + TypeScript
-- TailwindCSS + shadcn/ui
-- Framer Motion
-- React Query
-
-**Backend:**
-- FastAPI (Python)
-- PostgreSQL + SQLAlchemy
-- Redis (caching & queues)
-- WebSockets (real-time streaming)
-- Celery (background tasks)
-
-**AI:**
-- **Ollama** (Free, Local, Unlimited)
-- LlamaIndex (RAG)
-- TF-IDF (Knowledge Base)
-
-## 📁 Project Structure
-
-```
-forgeai/
-├── backend/              # FastAPI backend
-│   ├── app/
-│   │   ├── api/v1/      # API routes
-│   │   ├── core/        # Config, brain, kb, security
-│   │   ├── models/      # Database models
-│   │   └── services/    # Business logic
-│   ├── alembic/         # Database migrations
-│   └── requirements.txt
-├── frontend/            # Next.js frontend
-│   ├── app/             # App router pages
-│   ├── components/      # React components
-│   └── lib/             # Utilities
-├── docs/                # Documentation
-└── README.md
-```
-
-## 🛠️ Quick Start
-
-### Prerequisites
-
-- Python 3.9+ (Python 3.13 recommended)
-- Node.js 18+
-- PostgreSQL 12+
-- Redis (optional, for caching and background tasks)
-- **Ollama** - Download from https://ollama.ai/download
-
-### 1. Install Ollama
-
-```bash
-# Download from https://ollama.ai/download
-# Then pull a model:
-ollama pull llama3.1:8b
-```
-
-### 2. Backend Setup
+ForgeAI explores how AI systems can act as external cognitive layers for human learning. The core question: can we build persistent memory and retrieval-augmented reasoning without cloud APIs?
 
-```bash
-cd backend
+## The Problem
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\Activate.ps1
-
-# Upgrade pip and install dependencies
-pip install --upgrade pip setuptools wheel
-pip install pydantic-core --only-binary :all:  # Fix for Python 3.13
-pip install -r requirements.txt
+Human learning faces three constraints: working memory limits, retrieval failures, and reasoning gaps. Traditional study tools don't address these. Cloud-based AI systems introduce latency, cost, and privacy trade-offs. ForgeAI asks what happens when you keep everything local and build a system that remembers.
 
-# Set up environment
-cp .env.example .env
-# Edit .env with your PostgreSQL credentials:
-# DATABASE_URL=postgresql+psycopg://username:password@localhost/forgeai
-# DATABASE_URL_ASYNC=postgresql+asyncpg://username:password@localhost/forgeai
+## Cognitive Constraints
 
-# Create PostgreSQL database
-# Option 1: Using createdb command
-createdb forgeai
+**Memory**: Working memory holds about 7±2 items. Long-term knowledge exists but isn't always accessible when needed. ForgeAI maintains a persistent knowledge base that survives sessions.
 
-# Option 2: Using psql
-psql -U postgres
-CREATE DATABASE forgeai;
-\q
+**Retrieval**: Finding relevant information from documents is harder than storing it. The system uses TF-IDF vectorization to retrieve context before reasoning, not after.
 
-# Option 3: Using pgAdmin GUI
-# Right-click "Databases" → Create → Database → Name: forgeai
+**Reasoning**: LLMs reason in context windows. Without external memory, they forget between sessions. ForgeAI uses retrieval-augmented generation to ground responses in persistent knowledge.
 
-# Run database migrations
-alembic upgrade head
+## Why Local-First
 
-# Start server
-uvicorn app.main:app --reload
-```
+Local-first means no cloud API dependencies. Ollama runs models locally. PostgreSQL stores knowledge. Redis caches queries. Everything stays on your machine. This enables offline operation, unlimited usage, and privacy by default.
 
-Backend runs on `http://localhost:8000`
+The trade-off: you need local compute. A GPU helps but isn't required. The system falls back to CPU inference when needed.
 
-### 3. Frontend Setup
+## Design Decisions
 
-```bash
-cd frontend
+**TF-IDF over embeddings**: Simpler, no vector database, good enough for <10k documents. Semantic search can be added later if needed.
 
-# Install dependencies
-npm install
+**Dual-model architecture**: Google AI Studio (Gemini) as primary, Ollama as fallback. Automatic failover when rate limits hit or network fails.
 
-# Set up environment
-cp .env.example .env.local
-# Edit .env.local if needed (defaults work for local development)
+**PostgreSQL for knowledge**: Relational storage for structured data, file system for documents. No specialized vector DB required.
 
-# Start dev server
-npm run dev
-```
+**WebSocket streaming**: Real-time responses, not batch processing. The interface shows reasoning as it happens.
 
-### 4. Verify Installation
+## Scope Boundaries
 
-1. **Backend**: Visit http://localhost:8000/api/docs (Swagger UI)
-2. **Frontend**: Visit http://localhost:3000
-3. **Ollama**: Run `ollama list` to verify model is installed
-4. **Database**: Backend should start without connection errors
+This is not a general-purpose chatbot. It's optimized for learning workflows: document ingestion, summarization, question generation, and retrieval-augmented conversation. It doesn't do image generation, code execution, or multi-modal reasoning beyond text.
 
-## 🐛 Troubleshooting
+The system assumes single-user operation. Multi-user support exists but isn't the focus. Authentication exists for API security, not social features.
 
-### Backend Dependencies Issues
+## Relationship to AEROS
 
-**Problem**: `pydantic-core` requires Rust/Cargo
-**Solution**: 
-```bash
-pip install pydantic-core --only-binary :all:
-pip install -r requirements.txt
-```
+AEROS handles perception: what the robot sees. ForgeAI handles cognition: what the human learns. Both systems operate locally, process streams in real-time, and maintain persistent state. The difference is domain: AEROS processes sensor data, ForgeAI processes knowledge.
 
-**Problem**: `asyncpg` or `hiredis` build errors
-**Solution**: These are optional. Comment them out in `requirements.txt` if you don't need async PostgreSQL or Redis performance optimizations.
+The architectural similarity is intentional. Both systems explore how to build reliable AI systems without cloud dependencies.
 
-**Problem**: `numpy` build errors on Python 3.13
-**Solution**: Python 3.13 requires numpy 2.x. Update `langchain` to >=0.1.0 for compatibility.
+## What This Is Not
 
-### Database Connection Issues
+This is not a SaaS product. There's no hosted version, no subscription model, no marketing funnel. It's a research prototype exploring cognitive architectures.
 
-- Verify PostgreSQL is running: `pg_isready` or check Windows Services
-- Check credentials in `backend/.env`
-- Ensure database `forgeai` exists
-- Test connection: `psql -U username -d forgeai`
+This is not production-ready for enterprise use. Error handling exists but isn't comprehensive. The system works for single users with moderate document volumes. Scale beyond that requires architectural changes.
 
-### Ollama Issues
+## Getting Started
 
-- Verify Ollama is running: `curl http://localhost:11434/api/tags`
-- Pull model: `ollama pull llama3.1:8b`
-- Check model: `ollama list`
+See [TECHNICAL.md](TECHNICAL.md) for installation, API documentation, and deployment details.
 
-## 📚 Documentation
+## License
 
-- **[Architecture Guide](docs/ARCHITECTURE.md)** - System architecture and design decisions
-- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment guide
-- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute to ForgeAI
-- **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community guidelines
-
-## 🎯 Why Ollama?
-
-- ✅ **100% Free** - No API costs
-- ✅ **Unlimited Usage** - No rate limits
-- ✅ **Privacy** - Data stays local
-- ✅ **Offline** - Works without internet
-- ✅ **Open Source** - Fully transparent
-
-## 🏗️ Architecture
-
-- **Modular Design** - Clean separation of concerns
-- **Type-Safe** - TypeScript + Pydantic
-- **Scalable** - Async/await, background workers
-- **Production-Ready** - Error handling, logging, migrations
-
-See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture documentation.
-
-## 🧪 Testing
-
-### Backend
-```bash
-cd backend
-pytest
-```
-
-### Frontend
-```bash
-cd frontend
-npm test
-```
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for more testing guidelines.
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before submitting PRs.
-
-### Quick Start for Contributors
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run tests and ensure they pass
-5. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
-
-## 🗺️ Roadmap
-
-- [ ] Enhanced RAG with vector embeddings
-- [ ] Mobile app support
-- [ ] Collaborative workspaces
-- [ ] Advanced analytics and insights
-- [ ] Plugin system for extensibility
-- [ ] Multi-language support
-
-## ⚠️ Disclaimer
-
-ForgeAI is provided as-is for educational and personal use. The AI models used (Ollama) are run locally and the developers are not responsible for the content generated by these models.
-
----
-
-**Built with ❤️ for students and learners worldwide.**
+MIT
