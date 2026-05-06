@@ -11,37 +11,21 @@ const config: Config = {
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        ring: "#ecad29", // ring to Gold
+        background: "#0a0a0b", // background
+        foreground: "#ffffff",
         primary: {
-          DEFAULT: "#2563EB",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "#ecad29", // Change Blue to Gold
+          foreground: "#000000",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "#161618",
+          foreground: "#ffffff",
         },
       },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-      fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-      },
+      // ... rest of config
     },
   },
   plugins: [],
 }
 export default config
-

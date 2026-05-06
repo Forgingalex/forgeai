@@ -71,54 +71,36 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    """
-    Login and get access token via secure cookie.
-    
-    Args:
-        response: FastAPI response object
-        form_data: Login credentials (username, password)
-        db: Database session
-    
-    Returns:
-        Success message
-    
-    Raises:
-        AuthenticationError: If credentials are invalid
-    """
     logger.info(f"Login attempt: {form_data.username}")
-    
     user = db.query(User).filter(User.username == form_data.username).first()
     
     if not user or not verify_password(form_data.password, user.hashed_password):
-        logger.warning(f"Login failed: invalid credentials for {form_data.username}")
         raise AuthenticationError("Incorrect username or password")
     
     if not user.is_active:
-        logger.warning(f"Login failed: inactive user {form_data.username}")
         raise AuthenticationError("User account is inactive")
     
     access_token = create_access_token(data={"sub": user.username})
-    logger.info(f"Login successful: {form_data.username}")
     
+    # samesite="none" for Vercel -> Hugging Face cross-domain support
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=7 * 24 * 60 * 60,
+        secure=True,    # Required for samesite="none"
+        samesite="none", # Required because domains are different
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
     return {"message": "Login successful"}
 
-
 @router.post("/logout", response_model=Message)
 async def logout(response: Response):
-    """Logout by clearing the cookie."""
+    # Match the samesite policy on deletion
     response.delete_cookie(
         key="access_token",
         httponly=True,
         secure=True,
-        samesite="lax"
+        samesite="none"
     )
     return {"message": "Logout successful"}
 
