@@ -89,6 +89,7 @@ async def login(
         httponly=True,
         secure=True,    # Required for samesite="none"
         samesite="none", # Required because domains are different
+        path="/",
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
     return {"message": "Login successful"}
@@ -98,6 +99,7 @@ async def logout(response: Response):
     # Match the samesite policy on deletion
     response.delete_cookie(
         key="access_token",
+        path="/",
         httponly=True,
         secure=True,
         samesite="none"
