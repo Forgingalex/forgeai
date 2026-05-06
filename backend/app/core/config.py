@@ -24,7 +24,11 @@ class Settings(BaseSettings):
     DATABASE_URL_ASYNC: str = "postgresql+asyncpg://forgeai:forgeai@localhost/forgeai"
     
     # Redis
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
+    # Ensure Celery variables also point to the master REDIS_URL
+    CELERY_BROKER_URL: str = REDIS_URL
+    CELERY_RESULT_BACKEND: str = REDIS_URL
     
     # CORS
     CORS_ORIGINS: List[str] = [
