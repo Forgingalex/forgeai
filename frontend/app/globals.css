@@ -59,3 +59,25 @@
   }
 }
 
+@layer utilities {
+  .forge-surface {
+    isolation: isolate;
+  }
+}
+
+html {
+  background: #030711;
+}
+
+textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.35);
+  border-radius: 999px;
+}

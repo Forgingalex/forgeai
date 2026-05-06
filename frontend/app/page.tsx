@@ -1,6 +1,6 @@
-import { redirect } from 'next/navigation'
+import { WorkspaceGallery } from '@/components/landing/workspace-gallery'
 
 export default function Home() {
-  redirect('/chat')
+  return <WorkspaceGallery />
 }
 
