@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { apiPost } from '@/lib/api'
@@ -14,14 +14,22 @@ export default function LoginPage() {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [fullName, setFullName] = useState('')
   const [error, setError] = useState('')
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false)
   const router = useRouter()
   const { checkAuth } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (!isLogin && password !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
 
     try {
       if (!isLogin) {
@@ -152,17 +160,58 @@ export default function LoginPage() {
               />
             </motion.div>
             
-            <motion.div layout>
+            <motion.div layout className="relative">
               <Input
-                type="password"
-                placeholder="Password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Passkey"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#ecad29]"
+                className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#ecad29] pr-10"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors hover:text-[#ecad29]"
+                style={{ color: showPassword ? '#ecad29' : '#6b7280' }}
+              >
+                {showPassword ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </button>
             </motion.div>
             
+            <AnimatePresence mode="popLayout">
+              {!isLogin && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20, height: 0 }}
+                  animate={{ opacity: 1, x: 0, height: 'auto' }}
+                  exit={{ opacity: 0, x: -20, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="relative overflow-hidden"
+                >
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Confirm Passkey"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required={!isLogin}
+                    className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#ecad29]"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
+            <motion.div layout className="flex justify-end pt-1">
+              {isLogin && (
+                <button
+                  type="button"
+                  onClick={() => setIsForgotModalOpen(true)}
+                  className="text-xs text-gray-500 hover:text-[#ecad29] transition-colors"
+                >
+                  Forgot Passkey?
+                </button>
+              )}
+            </motion.div>
+
             <motion.div layout className="pt-2">
               <Button 
                 type="submit" 
@@ -177,7 +226,11 @@ export default function LoginPage() {
           <motion.div layout className="mt-6 text-center">
             <button
               type="button"
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={() => {
+                setIsLogin(!isLogin)
+                setError('')
+                setConfirmPassword('')
+              }}
               className="text-sm text-gray-400 hover:text-[#ecad29] transition-colors"
             >
               {isLogin ? "No clearance? Initialize here" : 'Already authorized? Access Vault'}
@@ -185,6 +238,37 @@ export default function LoginPage() {
           </motion.div>
         </motion.div>
       </div>
+
+      <AnimatePresence>
+        {isForgotModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-sm rounded-2xl border border-white/10 p-6 shadow-2xl"
+              style={{ backgroundColor: 'rgba(22, 22, 24, 0.9)' }}
+            >
+              <h2 className="text-xl font-bold text-white mb-2">Access Recovery</h2>
+              <p className="text-sm text-gray-300 mb-6">
+                Password recovery is restricted. Please contact the System Administrator to reset your forged identity.
+              </p>
+              <Button
+                onClick={() => setIsForgotModalOpen(false)}
+                className="w-full text-black hover:bg-[#d99d25] transition-colors"
+                style={{ backgroundColor: '#ecad29' }}
+              >
+                Acknowledge
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
