@@ -1,73 +1,95 @@
 """Logging configuration for the application."""
+
+from __future__ import annotations
+
+import json
 import logging
 import sys
-from pathlib import Path
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 
-def setup_logging(log_level: str = "INFO", log_file: Path = None) -> None:
-    """
-    Set up structured logging for the application.
-    
+class JsonFormatter(logging.Formatter):
+    """Format log records as structured JSON."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        """Return a JSON log line for the provided record.
+
+        Args:
+            record: The standard logging record emitted by Python.
+
+        Returns:
+            A compact JSON string suitable for log aggregation.
+        """
+        payload: Dict[str, Any] = {
+            "timestamp": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "module": record.module,
+            "function": record.funcName,
+            "line": record.lineno,
+        }
+
+        if record.exc_info:
+            payload["exception"] = self.formatException(record.exc_info)
+
+        reserved = set(logging.LogRecord("", 0, "", 0, "", (), None).__dict__.keys())
+        for key, value in record.__dict__.items():
+            if key in reserved or key.startswith("_"):
+                continue
+            try:
+                json.dumps(value)
+                payload[key] = value
+            except TypeError:
+                payload[key] = str(value)
+
+        return json.dumps(payload, ensure_ascii=False)
+
+
+def setup_logging(log_level: str = "INFO", log_file: Optional[Path] = None) -> None:
+    """Set up structured JSON logging for the application.
+
     Args:
-        log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        log_file: Optional path to log file. If None, logs only to console.
-    
-    Why structured logging:
-    - Easier to parse and analyze
-    - Better for production monitoring
-    - Consistent format across the application
+        log_level: Logging level such as DEBUG, INFO, WARNING, ERROR, or CRITICAL.
+        log_file: Optional path to a rotating JSON log file.
     """
-    # Create logs directory if it doesn't exist
     if log_file:
         log_file.parent.mkdir(parents=True, exist_ok=True)
-    
-    # Configure root logger
+
     logger = logging.getLogger("app")
     logger.setLevel(getattr(logging, log_level.upper()))
-    
-    # Remove existing handlers
     logger.handlers.clear()
-    
-    # Console handler with colored output
+
+    formatter = JsonFormatter(datefmt="%Y-%m-%dT%H:%M:%S%z")
+
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.INFO)
-    console_formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
-    )
-    console_handler.setFormatter(console_formatter)
+    console_handler.setLevel(getattr(logging, log_level.upper()))
+    console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
-    
-    # File handler with rotation
+
     if log_file:
         file_handler = RotatingFileHandler(
             log_file,
-            maxBytes=10 * 1024 * 1024,  # 10MB
-            backupCount=5
+            maxBytes=10 * 1024 * 1024,
+            backupCount=5,
         )
         file_handler.setLevel(logging.DEBUG)
-        file_formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S"
-        )
-        file_handler.setFormatter(file_formatter)
+        file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
-    
-    # Set levels for third-party loggers
+
     logging.getLogger("uvicorn").setLevel(logging.WARNING)
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 
 
 def get_logger(name: str) -> logging.Logger:
-    """
-    Get a logger instance for a module.
-    
+    """Get a logger instance for a module.
+
     Args:
-        name: Logger name (usually __name__)
-    
+        name: Logger name, usually ``__name__``.
+
     Returns:
-        Logger instance
+        Logger instance.
     """
     return logging.getLogger(f"app.{name}")
-

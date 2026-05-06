@@ -1,9 +1,15 @@
 """Database configuration and session management."""
+
+import logging
+
 from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+
 from app.core.config import settings
+
+logger = logging.getLogger("app.app.core.database")
 
 # Synchronous engine for migrations
 engine = create_engine(
@@ -28,11 +34,10 @@ try:
         expire_on_commit=False,
     )
 except (ImportError, ValueError) as e:
-    # asyncpg not installed or invalid URL - async features disabled
     async_engine = None
     AsyncSessionLocal = None
     if settings.DEBUG:
-        print(f"Warning: Async database engine not available: {e}")
+        logger.warning("async_database_engine_unavailable", extra={"error": str(e)})
 
 Base = declarative_base()
 
@@ -52,4 +57,3 @@ async def get_async_db():
         raise RuntimeError("Async database not available. Install asyncpg to enable async features.")
     async with AsyncSessionLocal() as session:
         yield session
-

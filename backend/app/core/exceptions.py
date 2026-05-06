@@ -1,26 +1,28 @@
-"""Custom exceptions for the application."""
-from fastapi import HTTPException, status
 from typing import Any, Dict, Optional
+
+from fastapi import HTTPException, status
+
+
+"""Custom exceptions for the application."""
 
 
 class ForgeAIException(HTTPException):
     """Base exception for ForgeAI application."""
-    
+
     def __init__(
         self,
         status_code: int,
         detail: str,
         error_code: Optional[str] = None,
         headers: Optional[Dict[str, Any]] = None,
-    ):
-        """
-        Initialize ForgeAI exception.
-        
+    ) -> None:
+        """Initialize ForgeAI exception.
+
         Args:
-            status_code: HTTP status code
-            detail: Error message
-            error_code: Optional error code for client handling
-            headers: Optional HTTP headers
+            status_code: HTTP status code.
+            detail: Error message.
+            error_code: Optional error code for client handling.
+            headers: Optional HTTP headers.
         """
         super().__init__(status_code=status_code, detail=detail, headers=headers)
         self.error_code = error_code
@@ -28,8 +30,8 @@ class ForgeAIException(HTTPException):
 
 class ValidationError(ForgeAIException):
     """Raised when input validation fails."""
-    
-    def __init__(self, detail: str, field: Optional[str] = None):
+
+    def __init__(self, detail: str, field: Optional[str] = None) -> None:
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=detail,
@@ -40,8 +42,8 @@ class ValidationError(ForgeAIException):
 
 class AuthenticationError(ForgeAIException):
     """Raised when authentication fails."""
-    
-    def __init__(self, detail: str = "Authentication failed"):
+
+    def __init__(self, detail: str = "Authentication failed") -> None:
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=detail,
@@ -51,8 +53,8 @@ class AuthenticationError(ForgeAIException):
 
 class AuthorizationError(ForgeAIException):
     """Raised when user lacks permission."""
-    
-    def __init__(self, detail: str = "Insufficient permissions"):
+
+    def __init__(self, detail: str = "Insufficient permissions") -> None:
         super().__init__(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=detail,
@@ -62,8 +64,8 @@ class AuthorizationError(ForgeAIException):
 
 class NotFoundError(ForgeAIException):
     """Raised when resource is not found."""
-    
-    def __init__(self, resource: str, identifier: Any = None):
+
+    def __init__(self, resource: str, identifier: Any = None) -> None:
         detail = f"{resource} not found"
         if identifier is not None:
             detail += f": {identifier}"
@@ -76,8 +78,8 @@ class NotFoundError(ForgeAIException):
 
 class ProcessingError(ForgeAIException):
     """Raised when file processing fails."""
-    
-    def __init__(self, detail: str, file_type: Optional[str] = None):
+
+    def __init__(self, detail: str, file_type: Optional[str] = None) -> None:
         super().__init__(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=detail,
@@ -88,11 +90,10 @@ class ProcessingError(ForgeAIException):
 
 class AIServiceError(ForgeAIException):
     """Raised when AI service fails."""
-    
-    def __init__(self, detail: str):
+
+    def __init__(self, detail: str) -> None:
         super().__init__(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=detail,
             error_code="AI_SERVICE_ERROR",
         )
-
