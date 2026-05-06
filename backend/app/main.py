@@ -28,11 +28,16 @@ app = FastAPI(
 # handles cases where the cloud provider sends origins as a raw string or a list.
 raw_origins = settings.CORS_ORIGINS
 if isinstance(raw_origins, str):
-    # Handle comma-separated strings "url1,url2" or a single "*"
-    origins = [o.strip() for o in raw_origins.split(",")] if "," in raw_origins else [raw_origins]
+    origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
 else:
-    # Fallback if it's already a list
     origins = raw_origins
+
+if "*" in origins or not origins:
+    origins = [
+        "https://forgeai-liard.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:3001"
+    ]
 
 app.add_middleware(
     CORSMiddleware,

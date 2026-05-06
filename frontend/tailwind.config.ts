@@ -9,21 +9,24 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "#ecad29", // ring to Gold
-        background: "#0a0a0b", // background
+        border: "rgba(255, 255, 255, 0.1)",
+        input: "rgba(255, 255, 255, 0.1)",
+        ring: "#ecad29",
+        background: "#0a0a0b",
         foreground: "#ffffff",
         primary: {
-          DEFAULT: "#ecad29", // Change Blue to Gold
+          DEFAULT: "#ecad29",
           foreground: "#000000",
         },
         secondary: {
           DEFAULT: "#161618",
           foreground: "#ffffff",
         },
+        card: {
+          DEFAULT: "rgba(22, 22, 24, 0.7)",
+          foreground: "#ffffff",
+        }
       },
-      // ... rest of config
     },
   },
   plugins: [],

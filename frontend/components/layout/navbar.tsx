@@ -9,10 +9,13 @@ import { cn } from '@/lib/utils'
 export function Navbar() {
   const pathname = usePathname()
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    // Clear cookie as well
-    document.cookie = 'token=; path=/; max-age=0; SameSite=Lax'
+  const handleLogout = async () => {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+    } catch (e) { }
     window.location.href = '/login'
   }
 
@@ -26,7 +29,7 @@ export function Navbar() {
   ]
 
   return (
-    <nav className="border-b border-white/10 bg-[#030711]/80 text-white backdrop-blur-2xl">
+    <nav className="border-b border-white/10 bg-[#030711]/80 text-white backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">

@@ -67,7 +67,7 @@ export default function LoginPage() {
           className="absolute inset-0 bg-cover bg-center"
           style={{ 
             backgroundImage: 'url(/forgeai_frontend.jpg)',
-            filter: 'blur(60px) brightness(0.25)',
+            filter: 'blur(80px) brightness(0.2)',
             transform: 'scale(1.2)'
           }}
         />
@@ -169,7 +169,7 @@ export default function LoginPage() {
                 className="w-full text-black hover:bg-[#d99d25] transition-colors"
                 style={{ backgroundColor: '#ecad29' }}
               >
-                {isLogin ? 'Access Vault' : 'Request Access'}
+                {isLogin ? 'Open Workspace' : 'Initialize Session'}
               </Button>
             </motion.div>
           </form>
