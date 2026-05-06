@@ -34,6 +34,8 @@ numpy>=1.19.5  # Python 3.13 requires numpy 2.x
 scikit-learn==1.5.2
 
 # RAG
+chromadb>=0.4.24
+sentence-transformers>=2.7.0
 llama-index==0.9.20
 langchain>=0.1.0  # Updated for numpy 2.x compatibility
 
@@ -58,4 +60,3 @@ pytest-asyncio==0.21.1
 pytest-cov==4.1.0
 httpx==0.25.2  # For testing FastAPI
 faker==20.1.0  # For generating test data
-

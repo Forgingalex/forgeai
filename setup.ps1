@@ -1,6 +1,5 @@
 # ForgeAI Setup Script for Windows
 Write-Host "ForgeAI Setup Script" -ForegroundColor Cyan
-Write-Host "======================" -ForegroundColor Cyan
 Write-Host ""
 
 # Check Python
@@ -73,4 +72,3 @@ Write-Host "4. Configure backend/.env with database credentials" -ForegroundColo
 Write-Host "5. Run migrations: cd backend && alembic upgrade head" -ForegroundColor White
 Write-Host "6. Start backend: cd backend && uvicorn app.main:app --reload" -ForegroundColor White
 Write-Host "7. Start frontend: cd frontend && npm run dev" -ForegroundColor White
-
