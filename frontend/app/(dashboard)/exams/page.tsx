@@ -204,7 +204,7 @@ export default function ExamsPage() {
                   >
                     <h3 className="font-medium">{exam.title}</h3>
                     <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
-                      {exam.status === 'completed' && exam.score !== null ? (
+                      {exam.status === 'completed' && exam.score != null ? (
                         <>
                           <Trophy className="w-4 h-4" />
                           <span>{exam.score.toFixed(0)}%</span>
@@ -240,7 +240,7 @@ export default function ExamsPage() {
                         </p>
                       )}
                     </div>
-                    {selectedExam.status === 'completed' && selectedExam.score !== null && (
+                    {selectedExam.status === 'completed' && selectedExam.score != null && (
                       <div className="text-right">
                         <div className="text-3xl font-bold text-blue-600">
                           {selectedExam.score.toFixed(0)}%
@@ -377,4 +377,3 @@ export default function ExamsPage() {
     </div>
   )
 }
-

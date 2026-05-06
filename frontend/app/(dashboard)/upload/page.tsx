@@ -7,6 +7,17 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { apiUpload } from '@/lib/api'
 
+interface UploadResponse {
+  id: number
+  filename: string
+  original_filename: string
+  file_type: string
+  file_size: number
+  is_processed: boolean
+  is_indexed: boolean
+  summary?: string | null
+}
+
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -31,7 +42,7 @@ export default function UploadPage() {
       formData.append('simple_summary', 'false')
 
       // Use 5 minute timeout for large PDFs
-      const result = await apiUpload('/api/v1/files/upload', formData, 300000)
+      const result = await apiUpload<UploadResponse>('/api/v1/files/upload', formData, 300000)
       
       if (result.summary) {
         setSummary(result.summary)
@@ -122,4 +133,3 @@ export default function UploadPage() {
     </div>
   )
 }
-

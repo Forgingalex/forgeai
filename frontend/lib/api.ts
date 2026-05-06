@@ -4,13 +4,11 @@ export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = localStorage.getItem('token')
-  
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
   })
@@ -41,8 +39,6 @@ export async function apiUpload<T>(
   formData: FormData,
   timeout: number = 300000 // 5 minutes default timeout
 ): Promise<T> {
-  const token = localStorage.getItem('token')
-  
   // Create AbortController for timeout
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeout)
@@ -50,9 +46,8 @@ export async function apiUpload<T>(
   try {
     const response = await fetch(`${API_URL}${endpoint}`, {
       method: 'POST',
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
+      credentials: 'include',
+      headers: {},
       body: formData,
       signal: controller.signal,
     })

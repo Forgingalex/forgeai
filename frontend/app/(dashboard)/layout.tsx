@@ -1,4 +1,5 @@
 import { Navbar } from '@/components/layout/navbar'
+import AuthGuard from '@/components/AuthGuard'
 
 export default function DashboardLayout({
   children,
@@ -6,10 +7,11 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navbar />
-      <main>{children}</main>
-    </div>
+    <AuthGuard>
+      <div className="min-h-screen bg-[#030711] text-white">
+        <Navbar />
+        <main>{children}</main>
+      </div>
+    </AuthGuard>
   )
 }
-
