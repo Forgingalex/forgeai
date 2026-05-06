@@ -25,9 +25,18 @@ app = FastAPI(
     redoc_url="/api/redoc",
 )
 
+# handles cases where the cloud provider sends origins as a raw string or a list.
+raw_origins = settings.CORS_ORIGINS
+if isinstance(raw_origins, str):
+    # Handle comma-separated strings "url1,url2" or a single "*"
+    origins = [o.strip() for o in raw_origins.split(",")] if "," in raw_origins else [raw_origins]
+else:
+    # Fallback if it's already a list
+    origins = raw_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
