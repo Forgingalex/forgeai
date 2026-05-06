@@ -1,6 +1,6 @@
 """Authentication endpoints."""
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
@@ -8,7 +8,7 @@ from datetime import timedelta
 from app.core.database import get_db
 from app.core.logging_config import get_logger
 from app.core.exceptions import AuthenticationError, ValidationError
-from app.core.security import verify_password, get_password_hash, create_access_token, decode_access_token
+from app.core.security import verify_password, get_password_hash, create_access_token, decode_access_token, get_current_user
 from app.core.config import settings
 from app.models.user import User
 
@@ -36,49 +36,8 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-async def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
-) -> User:
-    """
-    Get current authenticated user from JWT token.
-    
-    Args:
-        token: JWT access token from Authorization header
-        db: Database session
-    
-    Returns:
-        User object for authenticated user
-    
-    Raises:
-        AuthenticationError: If token is invalid or user not found
-    """
-    payload = decode_access_token(token)
-    if payload is None:
-        logger.warning("Invalid token provided")
-        raise AuthenticationError("Could not validate credentials")
-    
-    username: str = payload.get("sub")
-    if username is None:
-        logger.warning("Token missing 'sub' field")
-        raise AuthenticationError("Could not validate credentials")
-    
-    user = db.query(User).filter(User.username == username).first()
-    if user is None:
-        logger.warning(f"User not found: {username}")
-        raise AuthenticationError("Could not validate credentials")
-    
-    if not user.is_active:
-        logger.warning(f"Inactive user attempted access: {username}")
-        raise AuthenticationError("User account is inactive")
-    
-    logger.debug(f"Authenticated user: {username}")
-    return user
+class Message(BaseModel):
+    message: str
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -106,20 +65,22 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     return user
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=Message)
 async def login(
+    response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
     """
-    Login and get access token.
+    Login and get access token via secure cookie.
     
     Args:
+        response: FastAPI response object
         form_data: Login credentials (username, password)
         db: Database session
     
     Returns:
-        JWT access token
+        Success message
     
     Raises:
         AuthenticationError: If credentials are invalid
@@ -138,7 +99,28 @@ async def login(
     
     access_token = create_access_token(data={"sub": user.username})
     logger.info(f"Login successful: {form_data.username}")
-    return {"access_token": access_token, "token_type": "bearer"}
+    
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=7 * 24 * 60 * 60,
+    )
+    return {"message": "Login successful"}
+
+
+@router.post("/logout", response_model=Message)
+async def logout(response: Response):
+    """Logout by clearing the cookie."""
+    response.delete_cookie(
+        key="access_token",
+        httponly=True,
+        secure=True,
+        samesite="lax"
+    )
+    return {"message": "Logout successful"}
 
 
 @router.get("/me", response_model=UserResponse)

@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card } from '@/components/ui/card'
 import { apiPost } from '@/lib/api'
+import { useAuth } from '@/lib/contexts/AuthContext'
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true)
@@ -17,134 +17,174 @@ export default function LoginPage() {
   const [fullName, setFullName] = useState('')
   const [error, setError] = useState('')
   const router = useRouter()
+  const { checkAuth } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
     try {
-      if (isLogin) {
-        const formData = new FormData()
-        formData.append('username', username)
-        formData.append('password', password)
-        
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/auth/login`, {
-          method: 'POST',
-          body: formData,
-        })
-
-        if (!response.ok) {
-          throw new Error('Login failed')
-        }
-
-        const data = await response.json()
-        localStorage.setItem('token', data.access_token)
-        router.push('/chat')
-      } else {
+      if (!isLogin) {
         await apiPost('/api/v1/auth/register', {
           username,
           email,
           password,
           full_name: fullName,
         })
-        // Auto login after registration
-        const formData = new FormData()
-        formData.append('username', username)
-        formData.append('password', password)
-        
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/auth/login`, {
-          method: 'POST',
-          body: formData,
-        })
-
-        const data = await response.json()
-        localStorage.setItem('token', data.access_token)
-        router.push('/chat')
       }
+      
+      const formData = new FormData()
+      formData.append('username', username)
+      formData.append('password', password)
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/auth/login`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        throw new Error(isLogin ? 'Login failed' : 'Registration successful, but auto-login failed')
+      }
+
+      await checkAuth()
+      router.push('/chat')
     } catch (err: any) {
       setError(err.message || 'An error occurred')
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0a0a0b]">
+      {/* Background with Parallax Scale & Deep Blur */}
+      <motion.div 
+        className="absolute inset-0 z-0"
+        initial={{ scale: 1.1 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 10, ease: "easeOut" }}
       >
-        <Card className="p-8">
-          <div className="flex items-center gap-2 mb-6 justify-center">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ 
+            backgroundImage: 'url(/forgeai_frontend.jpg)',
+            filter: 'blur(60px) brightness(0.25)',
+            transform: 'scale(1.2)'
+          }}
+        />
+      </motion.div>
+
+      <div className="relative z-10 w-full max-w-md p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="backdrop-blur-xl rounded-2xl border border-white/10 p-8 shadow-2xl"
+          style={{ backgroundColor: 'rgba(22, 22, 24, 0.7)' }}
+        >
+          <div className="flex flex-col items-center gap-3 mb-8">
+            <motion.div 
+              whileHover={{ rotate: 180 }}
+              transition={{ duration: 0.5 }}
+              className="w-12 h-12 rounded-xl flex items-center justify-center border border-[#ecad29]/30"
+              style={{ backgroundColor: 'rgba(236, 173, 41, 0.1)' }}
+            >
+              <Sparkles className="w-6 h-6" style={{ color: '#ecad29' }} />
+            </motion.div>
+            <h1 className="text-3xl font-bold tracking-tight text-white">
               ForgeAI
             </h1>
+            <p className="text-sm text-gray-400">
+              {isLogin ? 'Enter the Research Vault' : 'Initialize your clearance'}
+            </p>
           </div>
 
-          <h2 className="text-xl font-semibold mb-2 text-center">
-            {isLogin ? 'Welcome back' : 'Create account'}
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 text-center">
-            {isLogin ? 'Sign in to continue' : 'Create account to access the system'}
-          </p>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-sm text-red-600 dark:text-red-400">
-              {error}
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mb-6 p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-sm text-red-200 text-center"
+              >
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <>
-                <Input
-                  type="text"
-                  placeholder="Full Name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required={!isLogin}
-                />
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required={!isLogin}
-                />
-              </>
-            )}
-            <Input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <Button type="submit" className="w-full">
-              {isLogin ? 'Sign In' : 'Sign Up'}
-            </Button>
+            <AnimatePresence mode="popLayout">
+              {!isLogin && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20, height: 0 }}
+                  animate={{ opacity: 1, x: 0, height: 'auto' }}
+                  exit={{ opacity: 0, x: -20, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4 overflow-hidden"
+                >
+                  <Input
+                    type="text"
+                    placeholder="Full Name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required={!isLogin}
+                    className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#ecad29]"
+                  />
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required={!isLogin}
+                    className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#ecad29]"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
+            <motion.div layout>
+              <Input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#ecad29]"
+              />
+            </motion.div>
+            
+            <motion.div layout>
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#ecad29]"
+              />
+            </motion.div>
+            
+            <motion.div layout className="pt-2">
+              <Button 
+                type="submit" 
+                className="w-full text-black hover:bg-[#d99d25] transition-colors"
+                style={{ backgroundColor: '#ecad29' }}
+              >
+                {isLogin ? 'Access Vault' : 'Request Access'}
+              </Button>
+            </motion.div>
           </form>
 
-          <div className="mt-4 text-center">
+          <motion.div layout className="mt-6 text-center">
             <button
+              type="button"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-blue-600 hover:underline"
+              className="text-sm text-gray-400 hover:text-[#ecad29] transition-colors"
             >
-              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+              {isLogin ? "No clearance? Initialize here" : 'Already authorized? Access Vault'}
             </button>
-          </div>
-        </Card>
-      </motion.div>
+          </motion.div>
+        </motion.div>
+      </div>
     </div>
   )
 }
-
