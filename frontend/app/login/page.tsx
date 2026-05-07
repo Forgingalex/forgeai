@@ -18,16 +18,20 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [fullName, setFullName] = useState('')
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false)
   const router = useRouter()
   const { checkAuth } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmitting) return
     setError('')
+    setIsSubmitting(true)
 
     if (!isLogin && password !== confirmPassword) {
-      setError('Passwords do not match')
+      setError('Passkeys do not match')
+      setIsSubmitting(false)
       return
     }
 
@@ -58,6 +62,7 @@ export default function LoginPage() {
       router.push('/chat')
     } catch (err: any) {
       setError(err.message || 'An error occurred')
+      setIsSubmitting(false)
     }
   }
 
@@ -213,11 +218,12 @@ export default function LoginPage() {
 
             <motion.div layout className="pt-2">
               <Button 
-                type="submit" 
-                className="w-full text-black hover:bg-[#d99d25] transition-colors"
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full text-black hover:bg-[#d99d25] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#ecad29' }}
               >
-                {isLogin ? 'Open Workspace' : 'Initialize Session'}
+                {isSubmitting ? 'Authenticating...' : (isLogin ? 'Open Workspace' : 'Initialize Session')}
               </Button>
             </motion.div>
           </form>

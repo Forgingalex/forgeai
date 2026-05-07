@@ -1,23 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get('access_token')?.value
-  
-  // Protect routes that require authentication
-  const protectedRoutes = ['/chat', '/upload', '/memory']
-  const isProtectedRoute = protectedRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route)
-  )
-  
-  if (isProtectedRoute && !token) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-  
+export function middleware(_request: NextRequest) {
+  // Auth protection is handled client-side by AuthGuard.
+  // The access_token cookie is scoped to the API domain (hf.space),
+  // so it is invisible to the Vercel edge. Any server-side cookie
+  // check here would cause an infinite redirect loop.
   return NextResponse.next()
 }
 
 export const config = {
   matcher: ['/chat/:path*', '/upload/:path*', '/memory/:path*']
 }
-
