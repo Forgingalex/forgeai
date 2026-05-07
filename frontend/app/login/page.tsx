@@ -41,13 +41,12 @@ export default function LoginPage() {
         })
       }
       
-      const formData = new FormData()
-      formData.append('username', username)
-      formData.append('password', password)
+      const body = new URLSearchParams({ username, password })
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/auth/login`, {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
         credentials: 'include'
       })
 
