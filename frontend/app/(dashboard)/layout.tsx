@@ -8,7 +8,7 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-[#030711] text-white">
+      <div className="min-h-screen bg-[#0a0a0b] text-white">
         <Navbar />
         <main>{children}</main>
       </div>
