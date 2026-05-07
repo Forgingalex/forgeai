@@ -1,4 +1,11 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+/**
+ * ForgeAI API client.
+ *
+ * All requests go through the Vercel rewrite proxy (/api/* → HF Space),
+ * so cookies are first-party and credentials are sent automatically.
+ */
+
+const API_URL = ''
 
 export async function apiRequest<T>(
   endpoint: string,
@@ -37,9 +44,8 @@ export async function apiGet<T>(endpoint: string): Promise<T> {
 export async function apiUpload<T>(
   endpoint: string,
   formData: FormData,
-  timeout: number = 300000 // 5 minutes default timeout
+  timeout: number = 300000
 ): Promise<T> {
-  // Create AbortController for timeout
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeout)
   
@@ -68,4 +74,3 @@ export async function apiUpload<T>(
     throw error
   }
 }
-

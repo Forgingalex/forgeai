@@ -27,9 +27,9 @@ interface ChatSession {
   updated_at: string | null
 }
 
-function getSocketUrl(sessionId: number) {
+function getSocketUrl(sessionId: number, token: string) {
   const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000'
-  return `${wsUrl}/api/v1/chat/ws/${sessionId}`
+  return `${wsUrl}/api/v1/chat/ws/${sessionId}?token=${encodeURIComponent(token)}`
 }
 
 function ChatClient() {
@@ -70,67 +70,84 @@ function ChatClient() {
   useEffect(() => {
     if (!sessionId) return undefined
 
-    const socket = new WebSocket(getSocketUrl(sessionId))
-    wsRef.current = socket
+    let cancelled = false
+    const connect = async () => {
+      try {
+        const res = await fetch('/api/v1/auth/ws-token', { credentials: 'include' })
+        if (!res.ok) return
+        const { token } = await res.json()
+        if (cancelled) return
 
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data)
-      if (data.type === 'chunk') {
-        setMessages((current) => {
-          const assistantId = assistantIdRef.current
-          const last = current[current.length - 1]
-          if (assistantId && last?.id === assistantId && last.role === 'assistant') {
-            return [...current.slice(0, -1), { ...last, content: last.content + data.content }]
+        const socket = new WebSocket(getSocketUrl(sessionId, token))
+        wsRef.current = socket
+
+        socket.onmessage = (event) => {
+          const data = JSON.parse(event.data)
+          if (data.type === 'chunk') {
+            setMessages((current) => {
+              const assistantId = assistantIdRef.current
+              const last = current[current.length - 1]
+              if (assistantId && last?.id === assistantId && last.role === 'assistant') {
+                return [...current.slice(0, -1), { ...last, content: last.content + data.content }]
+              }
+              const newId = Date.now()
+              assistantIdRef.current = newId
+              return [
+                ...current,
+                { id: newId, role: 'assistant', content: data.content, created_at: new Date().toISOString() },
+              ]
+            })
           }
-          const newId = Date.now()
-          assistantIdRef.current = newId
-          return [
+
+          if (data.type === 'complete') {
+            setIsLoading(false)
+            const sources = Array.isArray(data.sources) ? data.sources : []
+            setMessages((current) =>
+              current.map((message) =>
+                message.id === assistantIdRef.current ? { ...message, sources } : message
+              )
+            )
+            assistantIdRef.current = null
+          }
+
+          if (data.type === 'error') {
+            setIsLoading(false)
+            assistantIdRef.current = null
+            setMessages((current) => [
+              ...current,
+              {
+                id: Date.now(),
+                role: 'assistant',
+                content: `Error: ${data.message}`,
+                created_at: new Date().toISOString(),
+              },
+            ])
+          }
+        }
+
+        socket.onerror = () => {
+          setIsLoading(false)
+          setMessages((current) => [
             ...current,
-            { id: newId, role: 'assistant', content: data.content, created_at: new Date().toISOString() },
-          ]
-        })
-      }
-
-      if (data.type === 'complete') {
-        setIsLoading(false)
-        const sources = Array.isArray(data.sources) ? data.sources : []
-        setMessages((current) =>
-          current.map((message) =>
-            message.id === assistantIdRef.current ? { ...message, sources } : message
-          )
-        )
-        assistantIdRef.current = null
-      }
-
-      if (data.type === 'error') {
-        setIsLoading(false)
-        assistantIdRef.current = null
-        setMessages((current) => [
-          ...current,
-          {
-            id: Date.now(),
-            role: 'assistant',
-            content: `Error: ${data.message}`,
-            created_at: new Date().toISOString(),
-          },
-        ])
+            {
+              id: Date.now(),
+              role: 'assistant',
+              content: 'Connection error. Please retry after the API server is ready.',
+              created_at: new Date().toISOString(),
+            },
+          ])
+        }
+      } catch (err) {
+        console.error('WebSocket connection failed:', err)
       }
     }
 
-    socket.onerror = () => {
-      setIsLoading(false)
-      setMessages((current) => [
-        ...current,
-        {
-          id: Date.now(),
-          role: 'assistant',
-          content: 'Connection error. Please retry after the API server is ready.',
-          created_at: new Date().toISOString(),
-        },
-      ])
-    }
+    connect()
 
-    return () => socket.close()
+    return () => {
+      cancelled = true
+      wsRef.current?.close()
+    }
   }, [sessionId])
 
   useEffect(() => {

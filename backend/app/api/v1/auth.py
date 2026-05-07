@@ -112,3 +112,16 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current user information."""
     return current_user
 
+
+@router.get("/ws-token")
+async def get_ws_token(current_user: User = Depends(get_current_user)):
+    """Issue a short-lived token for WebSocket authentication.
+
+    The Vercel rewrite proxy handles HTTP cookies correctly but cannot
+    proxy WebSocket connections. The frontend fetches this token through
+    the proxy (cookie is sent) and then passes it as a query parameter
+    to the direct WebSocket connection to HF Space.
+    """
+    token = create_access_token(data={"sub": current_user.username})
+    return {"token": token}
+

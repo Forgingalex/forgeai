@@ -104,7 +104,7 @@ async def websocket_chat(websocket: WebSocket, session_id: int) -> None:
     db = SessionLocal()
 
     try:
-        token = websocket.cookies.get("access_token", "")
+        token = websocket.cookies.get("access_token", "") or websocket.query_params.get("token", "")
         payload = decode_access_token(token) if token else {}
         username = payload.get("sub")
         user = UserRepository(db).get_by_username(str(username)) if username else None

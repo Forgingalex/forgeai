@@ -11,7 +11,7 @@ export function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/auth/logout`, {
+      await fetch('/api/v1/auth/logout', {
         method: 'POST',
         credentials: 'include'
       })
@@ -34,10 +34,10 @@ export function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex">
             <Link href="/chat" className="flex items-center gap-2 px-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-200/30 bg-cyan-200/10">
-                <Sparkles className="w-5 h-5 text-cyan-100" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#ecad29]/30" style={{ backgroundColor: 'rgba(236, 173, 41, 0.1)' }}>
+                <Sparkles className="w-5 h-5" style={{ color: '#ecad29' }} />
               </div>
-              <span className="bg-gradient-to-r from-cyan-100 to-amber-100 bg-clip-text text-xl font-bold text-transparent">
+              <span className="text-xl font-bold text-white">
                 ForgeAI
               </span>
             </Link>
@@ -53,7 +53,7 @@ export function Navbar() {
                     className={cn(
                       "inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors",
                       isActive
-                        ? "border-cyan-200 text-cyan-100"
+                        ? "border-[#ecad29] text-[#ecad29]"
                         : "border-transparent text-slate-400 hover:border-white/30 hover:text-slate-100"
                     )}
                   >
