@@ -155,10 +155,10 @@ function ChatClient() {
   }, [messages])
 
   const status = useMemo(() => {
-    if (mode === 'search') return { icon: Database, label: 'Search mode', tone: 'text-[#ecad29]' }
-    if (mode === 'think') return { icon: Sparkles, label: 'Think mode', tone: 'text-[#facc15]' } // A slightly different gold for variety
-    if (mode === 'canvas') return { icon: Code2, label: 'Canvas mode', tone: 'text-[#d97706]' }
-    return { icon: Sparkles, label: 'Chat mode', tone: 'text-[#ecad29]' }
+    if (mode === 'search') return { icon: Database, label: 'Search mode', tone: 'text-cyan-200' }
+    if (mode === 'think') return { icon: Sparkles, label: 'Think mode', tone: 'text-violet-200' }
+    if (mode === 'canvas') return { icon: Code2, label: 'Canvas mode', tone: 'text-amber-200' }
+    return { icon: Sparkles, label: 'Chat mode', tone: 'text-slate-200' }
   }, [mode])
 
   const handleSend = (message: string, _files: File[], selectedMode: PromptMode) => {
@@ -191,24 +191,17 @@ function ChatClient() {
   const StatusIcon = status.icon
 
   return (
-    <div className="forge-surface flex h-[calc(100vh-4rem)] overflow-hidden text-white bg-[#0a0a0b] relative">
-      {/* Background with Deep Blur matching Login page */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center z-0"
-        style={{ 
-          backgroundImage: 'url(/forgeai_frontend.jpg)',
-          filter: 'blur(80px) brightness(0.2)',
-          transform: 'scale(1.2)'
-        }}
-      />
-      <div className="absolute inset-0 z-0 bg-[#0a0a0b]/40" />
+    <div className="forge-surface flex h-[calc(100vh-4rem)] overflow-hidden text-white">
+      <div className="absolute inset-0 bg-[url('/forgeai_frontend.jpg')] bg-[length:520px_auto] bg-fixed bg-center opacity-70" />
+      <div className="absolute inset-0 bg-[#030711]/80" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(30,174,219,0.18),transparent_28%),radial-gradient(circle_at_82%_10%,rgba(236,173,41,0.16),transparent_26%)]" />
 
       <div className="relative z-10 flex w-full">
         <section className={cn('flex min-w-0 flex-1 flex-col', mode === 'canvas' && 'lg:w-1/2 lg:flex-none')}>
-          <header className="border-b border-white/10 bg-[#0a0a0b]/60 px-6 py-4 backdrop-blur-2xl">
+          <header className="border-b border-white/10 bg-[#06101d]/40 px-6 py-4 backdrop-blur-2xl">
             <div className="mx-auto flex max-w-5xl items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-[#ecad29]/70">ForgeAI Cognitive Platform</p>
+                <p className="text-xs uppercase tracking-[0.24em] text-cyan-100/70">ForgeAI Cognitive Platform</p>
                 <h1 className="mt-1 text-xl font-semibold text-white">Local-first research cockpit</h1>
               </div>
               <div className={cn('flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.08] px-3 py-1.5 text-sm backdrop-blur-xl', status.tone)}>
@@ -222,9 +215,9 @@ function ChatClient() {
             <div className="mx-auto flex max-w-5xl flex-col gap-4">
               {messages.length === 0 && (
                 <div className="flex min-h-[48vh] items-center justify-center">
-                  <div className="max-w-2xl rounded-2xl border border-[#ecad29]/20 bg-[#0a0a0b]/60 p-8 text-center shadow-2xl backdrop-blur-2xl">
-                    <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#ecad29]/30" style={{ backgroundColor: 'rgba(236, 173, 41, 0.1)' }}>
-                      <Sparkles className="h-6 w-6" style={{ color: '#ecad29' }} />
+                  <div className="max-w-2xl rounded-2xl border border-white/10 bg-white/[0.08] p-8 text-center shadow-2xl backdrop-blur-2xl">
+                    <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-200/30 bg-cyan-200/10">
+                      <Sparkles className="h-6 w-6 text-cyan-100" />
                     </div>
                     <h2 className="text-2xl font-semibold">Ask, retrieve, reason, or draft beside canvas.</h2>
                     <p className="mt-3 text-sm leading-6 text-slate-300">
@@ -245,10 +238,9 @@ function ChatClient() {
                     className={cn(
                       'max-w-3xl rounded-2xl border p-4 text-sm leading-6 shadow-2xl backdrop-blur-2xl',
                       message.role === 'user'
-                        ? 'border-[#ecad29]/30 text-white'
-                        : 'border-white/10 bg-[#161618]/70 text-slate-100'
+                        ? 'border-cyan-200/30 bg-cyan-300/15 text-cyan-50'
+                        : 'border-white/10 bg-[#09111f]/70 text-slate-100'
                     )}
-                    style={message.role === 'user' ? { backgroundColor: 'rgba(236, 173, 41, 0.15)' } : {}}
                   >
                     {message.role === 'assistant' ? (
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content || ' '}</ReactMarkdown>
@@ -256,7 +248,7 @@ function ChatClient() {
                       <p className="whitespace-pre-wrap">{message.content}</p>
                     )}
                     {message.sources && message.sources.length > 0 && (
-                      <div className="mt-3 border-t border-white/10 pt-3 text-xs text-[#ecad29]/80">
+                      <div className="mt-3 border-t border-white/10 pt-3 text-xs text-cyan-100/80">
                         Sources: {message.sources.join(', ')}
                       </div>
                     )}
@@ -267,7 +259,7 @@ function ChatClient() {
             </div>
           </main>
 
-          <footer className="border-t border-white/10 bg-[#0a0a0b]/60 p-4 backdrop-blur-2xl">
+          <footer className="border-t border-white/10 bg-[#030711]/50 p-4 backdrop-blur-2xl">
             <div className="mx-auto max-w-4xl">
               <PromptInputBox
                 isLoading={isLoading}

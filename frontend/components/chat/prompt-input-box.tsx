@@ -49,7 +49,7 @@ const TooltipContent = React.forwardRef<
     ref={ref}
     sideOffset={sideOffset}
     className={cn(
-      'z-50 overflow-hidden rounded-md border border-white/10 bg-[#0a0a0b]/95 px-3 py-1.5 text-sm text-white shadow-xl backdrop-blur-md',
+      'z-50 overflow-hidden rounded-md border border-white/10 bg-[#101722]/95 px-3 py-1.5 text-sm text-white shadow-xl backdrop-blur-md',
       className
     )}
     {...props}
@@ -81,7 +81,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-1/2 top-1/2 z-50 grid w-full max-w-[90vw] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-2xl border border-white/10 bg-[#0a0a0b] p-0 shadow-2xl md:max-w-[800px]',
+        'fixed left-1/2 top-1/2 z-50 grid w-full max-w-[90vw] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-2xl border border-white/10 bg-[#101722] p-0 shadow-2xl md:max-w-[800px]',
         className
       )}
       {...props}
@@ -106,7 +106,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'default', size = 'default', ...props }, ref) => {
     const variantClasses = {
-      default: 'bg-[#ecad29] text-black hover:bg-[#d99d25]',
+      default: 'bg-white text-[#101722] hover:bg-white/[0.08]5',
       ghost: 'bg-transparent text-gray-300 hover:bg-white/10 hover:text-white',
     }
     const sizeClasses = {
@@ -203,8 +203,8 @@ const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
           <div
             ref={ref}
             className={cn(
-              'rounded-3xl border border-white/10 bg-[#0a0a0b]/70 p-2 shadow-[0_18px_60px_rgba(0,0,0,0.38)] backdrop-blur-2xl transition',
-              isLoading && 'border-[#ecad29]/50',
+              'rounded-3xl border border-white/10 bg-[#101722]/70 p-2 shadow-[0_18px_60px_rgba(0,0,0,0.38)] backdrop-blur-2xl transition',
+              isLoading && 'border-cyan-300/50',
               className
             )}
             onDragLeave={onDragLeave}
@@ -289,7 +289,7 @@ function PromptInputAction({
 function CustomDivider() {
   return (
     <div className="relative mx-1 h-6 w-px">
-      <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-[#ecad29]/60 to-transparent" />
+      <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-cyan-200/60 to-transparent" />
     </div>
   )
 }
@@ -351,7 +351,7 @@ function ImageViewDialog({ imageUrl, onClose }: { imageUrl: string | null; onClo
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="overflow-hidden rounded-2xl bg-[#0a0a0b] shadow-2xl"
+          className="overflow-hidden rounded-2xl bg-[#101722] shadow-2xl"
         >
           <img src={imageUrl} alt="Full preview" className="max-h-[80vh] w-full rounded-2xl object-contain" />
         </motion.div>
@@ -545,11 +545,11 @@ export const PromptInputBox = React.forwardRef<HTMLDivElement, PromptInputBoxPro
                   />
                 </button>
               </PromptInputAction>
-              {modeButton('search', 'Search', Globe, 'border-[#ecad29]/80 bg-[#ecad29]/10 text-[#ecad29]')}
+              {modeButton('search', 'Search', Globe, 'border-cyan-300/80 bg-cyan-300/10 text-cyan-200')}
               <CustomDivider />
-              {modeButton('think', 'Think', BrainCog, 'border-[#facc15]/80 bg-[#facc15]/10 text-[#facc15]')}
+              {modeButton('think', 'Think', BrainCog, 'border-violet-300/80 bg-violet-300/10 text-violet-200')}
               <CustomDivider />
-              {modeButton('canvas', 'Canvas', FolderCog, 'border-[#d97706]/80 bg-[#d97706]/10 text-[#d97706]')}
+              {modeButton('canvas', 'Canvas', FolderCog, 'border-amber-300/80 bg-amber-300/10 text-amber-200')}
             </div>
 
             <PromptInputAction tooltip={isLoading ? 'Generating' : isRecording ? 'Stop recording' : hasContent ? 'Send' : 'Voice'}>
