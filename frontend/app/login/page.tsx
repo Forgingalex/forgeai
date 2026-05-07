@@ -97,10 +97,9 @@ export default function LoginPage() {
             <motion.div 
               whileHover={{ rotate: 180 }}
               transition={{ duration: 0.5 }}
-              className="w-12 h-12 rounded-xl flex items-center justify-center border border-[#ecad29]/30"
-              style={{ backgroundColor: 'rgba(236, 173, 41, 0.1)' }}
+              className="w-12 h-12 rounded-xl flex items-center justify-center border border-cyan-200/30 bg-[#1e293b]/50"
             >
-              <Sparkles className="w-6 h-6" style={{ color: '#ecad29' }} />
+              <Sparkles className="w-6 h-6 text-cyan-200" />
             </motion.div>
             <h1 className="text-3xl font-bold tracking-tight text-white">
               ForgeAI
@@ -139,7 +138,7 @@ export default function LoginPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required={!isLogin}
-                    className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#ecad29]"
+                    className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-cyan-400"
                   />
                   <Input
                     type="email"
@@ -147,7 +146,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required={!isLogin}
-                    className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#ecad29]"
+                    className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-cyan-400"
                   />
                 </motion.div>
               )}
@@ -160,7 +159,7 @@ export default function LoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#ecad29]"
+                className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-cyan-400"
               />
             </motion.div>
             
@@ -171,13 +170,13 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#ecad29] pr-10"
+                className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-cyan-400 pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors hover:text-[#ecad29]"
-                style={{ color: showPassword ? '#ecad29' : '#6b7280' }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors hover:text-cyan-400"
+                style={{ color: showPassword ? '#22d3ee' : '#6b7280' }}
               >
                 {showPassword ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               </button>
@@ -198,7 +197,7 @@ export default function LoginPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required={!isLogin}
-                    className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#ecad29]"
+                    className="bg-black/50 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-cyan-400"
                   />
                 </motion.div>
               )}
@@ -209,7 +208,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setIsForgotModalOpen(true)}
-                  className="text-xs text-gray-500 hover:text-[#ecad29] transition-colors"
+                  className="text-xs text-gray-500 hover:text-cyan-400 transition-colors"
                 >
                   Forgot Passkey?
                 </button>
@@ -220,8 +219,7 @@ export default function LoginPage() {
               <Button 
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full text-black hover:bg-[#d99d25] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: '#ecad29' }}
+                className="w-full text-slate-900 hover:bg-cyan-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-cyan-400"
               >
                 {isSubmitting ? 'Authenticating...' : (isLogin ? 'Open Workspace' : 'Initialize Session')}
               </Button>
@@ -236,7 +234,7 @@ export default function LoginPage() {
                 setError('')
                 setConfirmPassword('')
               }}
-              className="text-sm text-gray-400 hover:text-[#ecad29] transition-colors"
+              className="text-sm text-gray-400 hover:text-cyan-400 transition-colors"
             >
               {isLogin ? "No clearance? Initialize here" : 'Already authorized? Access Vault'}
             </button>
@@ -265,8 +263,7 @@ export default function LoginPage() {
               </p>
               <Button
                 onClick={() => setIsForgotModalOpen(false)}
-                className="w-full text-black hover:bg-[#d99d25] transition-colors"
-                style={{ backgroundColor: '#ecad29' }}
+                className="w-full text-slate-900 hover:bg-cyan-500 transition-colors bg-cyan-400"
               >
                 Acknowledge
               </Button>
